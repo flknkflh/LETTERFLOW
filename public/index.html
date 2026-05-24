@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LetterFlow Enterprise</title>
+  <meta name="description" content="Sistem manajemen surat menyurat enterprise berbasis WiFi lokal.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN PAGE ═══════════════ -->
+<div id="page-login" class="page active">
+  <div class="login-bg">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div>
+          <div class="logo-name">LetterFlow</div>
+          <div class="logo-sub">Enterprise Management Infrastructure</div>
+        </div>
+      </div>
+      <div class="login-form-wrap">
+        <label class="field-label">USERNAME</label>
+        <div class="input-icon-wrap">
+          <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input id="loginNip" type="text" placeholder="Masukkan NIP/Username" autocomplete="username">
+        </div>
+        <label class="field-label" style="margin-top:16px">PASSWORD</label>
+        <div class="input-icon-wrap">
+          <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="loginError" class="login-error hidden"></div>
+        <button id="loginBtn" class="btn-primary full" style="margin-top:24px">
+          LOGIN TO WORKSPACE
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        </button>
+        <p class="login-hint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          SECURE BY DESIGN • 256-BIT ENCRYPTION
+        </p>
+        <p class="login-note">Access to this system is restricted to authorized LetterFlow Enterprise users only. All activity is logged and monitored.</p>
+      </div>
+    </div>
+    <p class="login-footer">© 2024 LetterFlow Enterprise Management. All Rights Reserved.</p>
+    <div class="sys-status"><span class="dot-green"></span> System Status: All Services Operational</div>
+  </div>
+</div>
+
+<!-- ═══════════════ ROLE SELECT PAGE ═══════════════ -->
+<div id="page-role" class="page">
+  <div class="role-bg">
+    <div class="role-header">
+      <div class="logo-icon small"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <span class="logo-name" style="font-size:15px">LetterFlow Enterprise</span>
+    </div>
+    <h1 class="role-title">Pilih Peran Anda</h1>
+    <p class="role-desc">Selamat datang kembali. Silakan pilih kapasitas akses Anda untuk memulai sesi manajemen dokumen ini.</p>
+    <div class="role-cards">
+      <div class="role-card" data-role="super-admin">
+        <div class="role-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 4v6c0 5-3 8-7 10-4-2-7-5-7-10V6l7-4z"/><path d="M9 12l2 2 4-5"/></svg></div>
+        <h3>Super Admin</h3>
+        <p>Akses seluruh dashboard, manajemen akun, database surat, dan audit file masuk.</p>
+        <div class="role-card-action">MASUK SEBAGAI SUPER ADMIN <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="role-card" data-role="pembuat">
+        <div class="role-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <h3>Pembuat</h3>
+        <p>Inisiasi dokumen baru, kelola draf, dan siapkan alur kerja verifikasi.</p>
+        <div class="role-card-action">MASUK SEBAGAI PEMBUAT <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="role-card" data-role="pereview">
+        <div class="role-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <h3>Pereview</h3>
+        <p>Lakukan tinjauan teknis, berikan anotasi, dan validasi konten dokumen.</p>
+        <div class="role-card-action">MASUK SEBAGAI PEREVIEW <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="role-card" data-role="penandatangan">
+        <div class="role-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h3>Penanda Tangan</h3>
+        <p>Otorisasi dokumen melalui tanda tangan elektronik yang sah secara hukum.</p>
+        <div class="role-card-action">MASUK SEBAGAI PENANDA TANGAN <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="role-card" data-role="pemonitor">
+        <div class="role-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <h3>Pemonitor</h3>
+        <p>Pantau status dokumen secara real-time dan akses log audit keamanan.</p>
+        <div class="role-card-action">MASUK SEBAGAI PEMONITOR <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+    </div>
+    <div class="role-footer">
+      <span>Keamanan Sesi Terjamin</span> •
+      <span>Sesi berakhir dalam 60:00</span> •
+      <a href="#" id="logoutFromRole">Keluar Sesi</a>
+    </div>
+    <div class="sys-status dark"><span class="dot-green"></span> SISTEM AKTIF</div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN APP SHELL ═══════════════ -->
+<div id="page-app" class="page">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon small"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div>
+        <div class="sb-name">LetterFlow</div>
+        <div class="sb-sub">Enterprise Management</div>
+      </div>
+    </div>
+
+    <button class="btn-create-letter" id="sidebarCreateBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create Letter
+    </button>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-link active" data-view="dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="nav-link" data-view="inbox">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        Inbox
+        <span class="nav-badge" id="inboxBadge"></span>
+      </a>
+      <a href="#" class="nav-link" data-view="archive">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        Archive
+      </a>
+      <a href="#" class="nav-link" data-view="workflows">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+        Workflows
+      </a>
+      <a href="#" class="nav-link" id="navUserMgmt" data-view="user-management" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        User Management
+      </a>
+      <a href="#" class="nav-link" id="navFileDb" data-view="file-database" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2v10"/><path d="M3 16h18v4H3z"/></svg>
+        Database File
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-link" id="backToRoleBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Ganti Peran
+      </a>
+      <a href="#" class="nav-link" data-view="settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+      <a href="#" class="nav-link" id="logoutBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Keluar
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar-app">
+      <div class="topbar-left">
+        <span class="topbar-brand">LetterFlow Enterprise</span>
+        <div class="topbar-tabs">
+          <button class="tab-btn active" data-filter="all">Drafts</button>
+          <button class="tab-btn" data-filter="review">Pending Review</button>
+          <button class="tab-btn" data-filter="signed">Signed</button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="globalSearch" type="text" placeholder="Cari surat...">
+        </div>
+        <button class="icon-btn" id="notifBtn" title="Notifikasi">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot" id="notifDot"></span>
+        </button>
+        <button class="icon-btn quick-verify-btn" id="quickVerifyBtn">Quick Verify</button>
+        <div class="avatar-btn" id="avatarBtn"></div>
+      </div>
+    </header>
+
+    <!-- Views -->
+    <div id="view-dashboard" class="view-panel active"></div>
+    <div id="view-inbox" class="view-panel"></div>
+    <div id="view-archive" class="view-panel"></div>
+    <div id="view-workflows" class="view-panel"></div>
+    <div id="view-user-management" class="view-panel"></div>
+    <div id="view-file-database" class="view-panel"></div>
+    <div id="view-settings" class="view-panel"></div>
+    <div id="view-letter-form" class="view-panel"></div>
+    <div id="view-letter-detail" class="view-panel"></div>
+    <div id="view-review" class="view-panel"></div>
+    <div id="view-signing" class="view-panel"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ TOAST NOTIFICATION ═══════════════ -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- ═══════════════ MODAL ═══════════════ -->
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script src="/api.js"></script>
+<script src="/ui.js"></script>
+<script src="/views.js"></script>
+<script src="/forms.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

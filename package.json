@@ -1,0 +1,18 @@
+{
+  "name": "surat-online-inartala",
+  "version": "1.0.0",
+  "description": "Aplikasi surat menyurat lokal untuk Bag InArTala.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "surat",
+    "dashboard",
+    "lokal"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true
+}
