@@ -864,6 +864,35 @@ async function handleApi(req, res, pathname) {
     return;
   }
 
+  // POST /api/letters/:id/request-revision (dari penandatangan)
+  if (req.method === "POST" && action === "request-revision") {
+    const body = await parseBody(req);
+    const { userId, catatan } = body;
+    if (!catatan) { sendJson(res, 400, { error: "Catatan revisi wajib diisi" }); return; }
+
+    const signer = db.users.find(u => u.id === userId);
+    letter.status = "Sedang Direvisi";
+    letter.catatan.unshift({
+      id: makeId("cat"),
+      oleh: signer ? signer.name : "Penandatangan",
+      peran: "penandatangan",
+      pesan: `Permintaan revisi dari penandatangan: ${catatan}`,
+      createdAt: nowIso()
+    });
+    // Reset status reviewer agar harus approve ulang setelah revisi
+    (letter.reviewHistory || []).forEach(r => {
+      if (r.status === "Disetujui") {
+        r.status = "Menunggu";
+        r.reviewedAt = null;
+      }
+    });
+    letter.updatedAt = nowIso();
+    addHistory(letter, `Revisi diminta penandatangan: ${catatan}`, signer ? signer.name : "Penandatangan");
+    writeDb(db);
+    sendJson(res, 200, { letter });
+    return;
+  }
+
   sendJson(res, 405, { error: "Metode tidak didukung" });
 }
 

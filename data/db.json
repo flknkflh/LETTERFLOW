@@ -45,6 +45,177 @@
   ],
   "letters": [
     {
+      "id": "surat-73092ae93f",
+      "nomor": "1243",
+      "perihal": "surat_keluar",
+      "kategori": "Surat Keputusan (SK)",
+      "prioritas": "Normal",
+      "status": "Menunggu Review",
+      "pembuatId": "usr-000",
+      "pembuatNama": "Super Admin",
+      "pembuatUnit": "Bag InArTala",
+      "reviewerIds": [
+        "usr-3512d3e524"
+      ],
+      "penandatanganId": "usr-e5824c18cc",
+      "ringkasan": "basiffbebnet",
+      "dokumen": null,
+      "catatan": [
+        {
+          "id": "cat-ca07cf55b6",
+          "oleh": "ttd",
+          "peran": "penandatangan",
+          "pesan": "Permintaan revisi dari penandatangan: wefd",
+          "createdAt": "2026-05-24T09:51:08.943Z"
+        },
+        {
+          "id": "cat-91b7e6f8f5",
+          "oleh": "ttd",
+          "peran": "penandatangan",
+          "pesan": "Permintaan revisi dari penandatangan: ygi",
+          "createdAt": "2026-05-24T09:48:12.179Z"
+        },
+        {
+          "id": "cat-bfbcc98d8e",
+          "oleh": "ttd",
+          "peran": "penandatangan",
+          "pesan": "Permintaan revisi dari penandatangan: asfas",
+          "createdAt": "2026-05-24T09:30:23.640Z"
+        },
+        {
+          "id": "cat-f2a366e272",
+          "oleh": "ttd",
+          "peran": "penandatangan",
+          "pesan": "Permintaan revisi dari penandatangan: tdj",
+          "createdAt": "2026-05-24T09:28:36.348Z"
+        }
+      ],
+      "reviewHistory": [
+        {
+          "id": "rv-f8555523eb",
+          "reviewerId": "usr-3512d3e524",
+          "reviewerNama": "reviuwer",
+          "status": "Menunggu",
+          "catatan": "",
+          "reviewedAt": null,
+          "attachments": []
+        }
+      ],
+      "tandaTangan": null,
+      "riwayat": [
+        {
+          "id": "log-f8507da7dc",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:51:37.458Z"
+        },
+        {
+          "id": "log-adf2267713",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:51:37.452Z"
+        },
+        {
+          "id": "log-6fa809e246",
+          "aksi": "Revisi diminta penandatangan: wefd",
+          "oleh": "ttd",
+          "createdAt": "2026-05-24T09:51:08.943Z"
+        },
+        {
+          "id": "log-ccb625e2ec",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-24T09:49:06.181Z"
+        },
+        {
+          "id": "log-bf6b50872a",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:48:40.438Z"
+        },
+        {
+          "id": "log-938fb593b1",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:48:40.431Z"
+        },
+        {
+          "id": "log-383e392233",
+          "aksi": "Revisi diminta penandatangan: ygi",
+          "oleh": "ttd",
+          "createdAt": "2026-05-24T09:48:12.179Z"
+        },
+        {
+          "id": "log-3c52441b1f",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-24T09:31:52.434Z"
+        },
+        {
+          "id": "log-b37296e010",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:31:05.101Z"
+        },
+        {
+          "id": "log-66cb2b84a1",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:31:05.094Z"
+        },
+        {
+          "id": "log-bbf8602ea9",
+          "aksi": "Revisi diminta penandatangan: asfas",
+          "oleh": "ttd",
+          "createdAt": "2026-05-24T09:30:23.640Z"
+        },
+        {
+          "id": "log-9be81cc7c4",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-24T09:29:43.536Z"
+        },
+        {
+          "id": "log-582a7be971",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:29:19.468Z"
+        },
+        {
+          "id": "log-176e005524",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:29:19.461Z"
+        },
+        {
+          "id": "log-31dae2937c",
+          "aksi": "Revisi diminta penandatangan: tdj",
+          "oleh": "ttd",
+          "createdAt": "2026-05-24T09:28:36.348Z"
+        },
+        {
+          "id": "log-f236f0f558",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-24T09:28:12.989Z"
+        },
+        {
+          "id": "log-ec2822ed1b",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:27:56.704Z"
+        },
+        {
+          "id": "log-8b0fc8137d",
+          "aksi": "Surat dibuat",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-24T09:27:56.700Z"
+        }
+      ],
+      "createdAt": "2026-05-24T09:27:56.699Z",
+      "updatedAt": "2026-05-24T09:51:37.458Z"
+    },
+    {
       "id": "surat-6075518256",
       "nomor": "12345",
       "perihal": "surat_keluar",

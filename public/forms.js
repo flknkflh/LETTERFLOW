@@ -339,6 +339,16 @@ async function renderSigningForm(letterId) {
             ✓ Sahkan & Tandatangani
           </button>
         </div>
+        <div class="section-card">
+          <div class="section-title" style="margin-bottom:14px">Minta Revisi ke Pembuat</div>
+          <div class="field-group">
+            <label>Catatan Revisi <span style="color:#e53e3e">*</span></label>
+            <textarea id="sign-catatan-revisi" rows="3" placeholder="Jelaskan apa yang perlu direvisi oleh pembuat..."></textarea>
+          </div>
+          <button class="btn-sm btn-outline" style="margin-top:8px" onclick="mintaRevisiDariPenandatangan('${letterId}')">
+            ↺ Minta Revisi ke Pembuat
+          </button>
+        </div>
       </div>
       <div>
         <div class="section-card">
@@ -395,6 +405,20 @@ async function doSign(letterId) {
     showToast('Dokumen berhasil ditandatangani ✓', 'success');
     await refreshData();
     switchView('dashboard');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function mintaRevisiDariPenandatangan(letterId) {
+  const catatan = document.getElementById('sign-catatan-revisi')?.value.trim();
+  if (!catatan) { showToast('Catatan revisi wajib diisi', 'error'); return; }
+  try {
+    await API.requestRevisionFromSigner(letterId, {
+      userId: window._currentUser.id,
+      catatan
+    });
+    showToast('Permintaan revisi terkirim ke pembuat ✓', 'success');
+    await refreshData();
+    switchView('inbox');
   } catch(e) { showToast(e.message, 'error'); }
 }
 
