@@ -183,6 +183,26 @@ function collectFileAudit(db) {
         });
       }
     }
+
+    for (const revision of letter.signerRevisions || []) {
+      for (const attachment of revision.attachments || []) {
+        files.push({
+          id: attachment.id || attachment.storedName,
+          type: "Lampiran Revisi Penandatangan",
+          letterId: letter.id,
+          revisionId: revision.id,
+          nomor: letter.nomor,
+          perihal: letter.perihal,
+          uploader: revision.signerNama || "Penandatangan",
+          role: "penandatangan",
+          originalName: attachment.originalName,
+          storedName: attachment.storedName,
+          mime: attachment.mime,
+          size: attachment.size,
+          uploadedAt: attachment.uploadedAt || revision.createdAt
+        });
+      }
+    }
   }
   return files.sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
 }
@@ -352,6 +372,19 @@ function buildBackupZip(db) {
           name: `${base}/lampiran-revisi/${sanitizePathSegment(review.reviewerNama, "Reviewer")}/${sanitizeFileName(attachment.originalName || attachment.storedName)}`,
           data: attachmentBuffer,
           date: attachment.uploadedAt || review.reviewedAt
+        });
+        manifest.fileCount++;
+      }
+    }
+
+    for (const revision of letter.signerRevisions || []) {
+      for (const attachment of revision.attachments || []) {
+        const attachmentBuffer = fileBufferFromUpload(attachment);
+        if (!attachmentBuffer) continue;
+        entries.push({
+          name: `${base}/lampiran-revisi-penandatangan/${sanitizePathSegment(revision.signerNama, "Penandatangan")}/${sanitizeFileName(attachment.originalName || attachment.storedName)}`,
+          data: attachmentBuffer,
+          date: attachment.uploadedAt || revision.createdAt
         });
         manifest.fileCount++;
       }
@@ -651,6 +684,21 @@ async function handleApi(req, res, pathname) {
     return;
   }
 
+  const signerAttachmentMatch = pathname.match(/^\/api\/signer-revision-attachments\/([^/]+)\/([^/]+)\/([^/]+)$/);
+  if (req.method === "GET" && signerAttachmentMatch) {
+    const [, letterId, revisionId, attachmentId] = signerAttachmentMatch;
+    const targetLetter = db.letters.find(l => l.id === letterId);
+    const revision = targetLetter && (targetLetter.signerRevisions || []).find(r => r.id === revisionId);
+    const attachment = revision && (revision.attachments || []).find(a => a.id === attachmentId);
+    if (!attachment || !attachment.storedName) {
+      sendJson(res, 404, { error: "Lampiran revisi penandatangan tidak ditemukan" });
+      return;
+    }
+    const disposition = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams.get("download") === "1" ? "attachment" : "inline";
+    sendFile(res, path.join(UPLOADS_DIR, attachment.storedName), attachment.originalName, attachment.mime, disposition);
+    return;
+  }
+
   if (req.method === "POST" && pathname === "/api/letters") {
     const body = await parseBody(req);
     if (!body.perihal || !body.pembuatId) {
@@ -871,13 +919,23 @@ async function handleApi(req, res, pathname) {
     if (!catatan) { sendJson(res, 400, { error: "Catatan revisi wajib diisi" }); return; }
 
     const signer = db.users.find(u => u.id === userId);
+    const revision = {
+      id: makeId("srv"),
+      signerId: userId || null,
+      signerNama: signer ? signer.name : "Penandatangan",
+      catatan: String(catatan).trim(),
+      attachments: saveReviewAttachments(body.attachments),
+      createdAt: nowIso()
+    };
+    letter.signerRevisions = letter.signerRevisions || [];
+    letter.signerRevisions.unshift(revision);
     letter.status = "Sedang Direvisi";
     letter.catatan.unshift({
       id: makeId("cat"),
-      oleh: signer ? signer.name : "Penandatangan",
+      oleh: revision.signerNama,
       peran: "penandatangan",
       pesan: `Permintaan revisi dari penandatangan: ${catatan}`,
-      createdAt: nowIso()
+      createdAt: revision.createdAt
     });
     // Reset status reviewer agar harus approve ulang setelah revisi
     (letter.reviewHistory || []).forEach(r => {
@@ -887,7 +945,7 @@ async function handleApi(req, res, pathname) {
       }
     });
     letter.updatedAt = nowIso();
-    addHistory(letter, `Revisi diminta penandatangan: ${catatan}`, signer ? signer.name : "Penandatangan");
+    addHistory(letter, `Revisi diminta penandatangan: ${catatan}`, revision.signerNama);
     writeDb(db);
     sendJson(res, 200, { letter });
     return;

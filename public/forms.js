@@ -311,6 +311,48 @@ async function submitReview(letterId, status) {
   } catch(e) { showToast(e.message, 'error'); }
 }
 
+function handleSignerRevisionAttachmentSelect(input) {
+  const files = [...input.files];
+  const allowed = ['application/pdf', 'image/png', 'image/jpeg'];
+  if (files.some(file => !allowed.includes(file.type))) {
+    showToast('Lampiran revisi hanya PDF, PNG, atau JPG', 'error');
+    input.value = '';
+    window._signRevisionAttachments = [];
+    return;
+  }
+  if (files.some(file => file.size > 15 * 1024 * 1024)) {
+    showToast('Ukuran tiap lampiran maksimal 15MB', 'error');
+    input.value = '';
+    window._signRevisionAttachments = [];
+    return;
+  }
+  window._signRevisionAttachments = files;
+  const list = document.getElementById('sign-revision-attachment-list');
+  if (list) {
+    list.innerHTML = files.map(file => `
+      <div class="revision-file">
+        <div class="document-meta"><strong>${file.name}</strong><span>${file.type} • ${(file.size / 1024 / 1024).toFixed(2)} MB</span></div>
+      </div>`).join('');
+  }
+}
+
+async function mintaRevisiDariPenandatangan(letterId) {
+  const catatan = document.getElementById('sign-catatan-revisi')?.value.trim();
+  if (!catatan) { showToast('Catatan revisi wajib diisi', 'error'); return; }
+  try {
+    const attachments = await Promise.all((window._signRevisionAttachments || []).map(fileToPayload));
+    await API.requestRevisionFromSigner(letterId, {
+      userId: window._currentUser.id,
+      catatan,
+      attachments
+    });
+    window._signRevisionAttachments = [];
+    showToast('Permintaan revisi terkirim ke pembuat', 'success');
+    await refreshData();
+    switchView('inbox');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
 /* ─── SIGNING FORM ─── */
 async function renderSigningForm(letterId) {
   const { letter } = await API.getLetter(letterId);
@@ -344,6 +386,11 @@ async function renderSigningForm(letterId) {
           <div class="field-group">
             <label>Catatan Revisi <span style="color:#e53e3e">*</span></label>
             <textarea id="sign-catatan-revisi" rows="3" placeholder="Jelaskan apa yang perlu direvisi oleh pembuat..."></textarea>
+          </div>
+          <div class="field-group">
+            <label>Lampiran Revisi (opsional)</label>
+            <input id="sign-revision-attachments" type="file" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" multiple onchange="handleSignerRevisionAttachmentSelect(this)">
+            <div id="sign-revision-attachment-list" class="revision-attachments"></div>
           </div>
           <button class="btn-sm btn-outline" style="margin-top:8px" onclick="mintaRevisiDariPenandatangan('${letterId}')">
             ↺ Minta Revisi ke Pembuat

@@ -361,3 +361,90 @@ ul,ol{list-style:none}
 .page-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .page-btn:hover:not(:disabled){border-color:#1a2236;color:#1a2236}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Desktop layout on phones: keep the full web dashboard visible and zoomable. */
+@media(max-width:900px){
+  html,body{width:1280px;min-width:1280px;height:100%;overflow:auto}
+  .page{position:fixed;inset:0;min-width:1280px;overflow:auto}
+  .page.active{display:flex}
+  #page-app.page.active{display:flex;flex-direction:row;height:100vh;min-width:1280px;overflow:hidden}
+  .login-bg,.role-bg{min-width:1280px}
+
+  .sidebar{
+    width:240px;height:100vh;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:20px 12px;display:flex;flex-direction:column;align-items:stretch;gap:0;border-top:0
+  }
+  .sidebar-logo{display:flex}
+  .btn-create-letter{
+    display:flex;width:100%;height:auto;min-width:0;margin:0 0 24px;
+    padding:11px 16px;font-size:13px;border-radius:10px
+  }
+  .sidebar-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+  .sidebar-bottom{
+    display:flex;flex-direction:column;gap:2px;flex:0 0 auto;
+    border-top:1px solid rgba(255,255,255,.08);padding-top:12px;margin-top:12px
+  }
+  .nav-link{
+    min-width:0;height:auto;flex:0 0 auto;flex-direction:row;justify-content:flex-start;
+    gap:10px;padding:9px 12px;text-align:left;font-size:13px;border-radius:8px
+  }
+  .nav-link svg{width:16px;height:16px}
+  .nav-badge{position:static;margin-left:auto}
+
+  .main-content{height:auto;min-height:0;flex:1;overflow:hidden}
+  .topbar-app{
+    height:60px;min-height:60px;display:flex;flex-direction:row;align-items:center;
+    justify-content:space-between;padding:0 24px;gap:0
+  }
+  .topbar-left{width:auto;display:flex;flex-direction:row;align-items:center;gap:24px}
+  .topbar-right{width:auto;display:flex;flex-direction:row;align-items:center;gap:10px;justify-content:flex-start}
+  .topbar-brand{font-size:14px}
+  .topbar-tabs{width:auto;overflow:visible;padding-bottom:0}
+  .tab-btn{white-space:normal;padding:6px 14px}
+  .search-wrap{flex:0 0 auto;min-width:0}
+  .search-wrap input{width:200px;height:auto}
+  .quick-verify-btn{display:flex}
+  .avatar-btn,.icon-btn{width:36px;height:36px;flex:0 0 auto}
+
+  .view-panel{padding:28px}
+  .page-title{font-size:26px;line-height:1.2;letter-spacing:-.5px}
+  .page-sub{font-size:13px;margin-bottom:24px}
+  .breadcrumb{margin-bottom:18px;overflow:visible;white-space:normal}
+  .stats-grid{grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+  .stat-card{padding:24px;border-radius:14px}
+  .stat-value{font-size:36px}
+
+  .section-card,.form-section{padding:24px;border-radius:14px;margin-bottom:20px;overflow:visible}
+  .section-header,.flex-between{align-items:center;flex-direction:row;gap:16px}
+  .section-title{font-size:16px}
+  .actions-row{width:auto;gap:8px}
+  .actions-row .btn-sm,.actions-row a.btn-sm{flex:0 0 auto;justify-content:center;text-align:center}
+  .btn-sm{min-height:0;padding:7px 14px}
+  .data-table{width:100%;min-width:0}
+  .data-table th,.data-table td{padding:14px 12px;font-size:13px}
+
+  .form-page{max-width:900px}
+  .form-grid-2{grid-template-columns:1fr 1fr}
+  .two-col{grid-template-columns:1fr 320px!important}
+  .detail-grid-info{grid-template-columns:repeat(3,1fr)!important}
+  .field-group input,.field-group select,.field-group textarea{font-size:14px}
+  .drop-zone{padding:40px}
+  .radio-group{flex-direction:row;gap:12px}
+  .reviewer-list{max-height:200px}
+  .workflow-panel{padding:24px}
+
+  .document-panel,.uploaded-file,.revision-file{align-items:center;flex-direction:row}
+  .document-meta strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .signature-download-panel{grid-template-columns:1fr 140px auto!important}
+  .signature-download-panel img{width:140px;height:70px}
+  .canvas-wrap,.canvas-wrap canvas,#sigCanvas{height:220px}
+  .comment-form-inline{flex-direction:row}
+  .comment-form-inline .btn-sm{width:auto}
+  .user-card{align-items:center;flex-direction:row;padding:16px 20px}
+
+  .modal-overlay{align-items:center;padding:0}
+  .modal-box{width:100%;max-width:480px;max-height:none;overflow:visible;border-radius:16px;padding:32px}
+  .modal-actions{flex-direction:row}
+  .modal-actions .btn-sm{width:auto}
+  .toast{width:auto;bottom:24px;text-align:left;padding:12px 24px}
+}

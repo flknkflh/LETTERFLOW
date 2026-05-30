@@ -209,7 +209,9 @@ async function renderFileDatabase(){
       <td><div class="actions-row">
         ${f.type==='Dokumen Surat'
           ? `<a class="btn-sm btn-outline" href="${API.documentUrl(f.letterId)}" target="_blank">Lihat</a><a class="btn-sm btn-dark" href="${API.documentDownloadUrl(f.letterId)}" download>Download</a>`
-          : `<a class="btn-sm btn-outline" href="${API.reviewAttachmentUrl(f.letterId, f.reviewId, f.id)}" target="_blank">Lihat</a><a class="btn-sm btn-dark" href="${API.reviewAttachmentDownloadUrl(f.letterId, f.reviewId, f.id)}" download>Download</a>`}
+          : f.type==='Lampiran Revisi Penandatangan'
+            ? `<a class="btn-sm btn-outline" href="${API.signerRevisionAttachmentUrl(f.letterId, f.revisionId, f.id)}" target="_blank">Lihat</a><a class="btn-sm btn-dark" href="${API.signerRevisionAttachmentDownloadUrl(f.letterId, f.revisionId, f.id)}" download>Download</a>`
+            : `<a class="btn-sm btn-outline" href="${API.reviewAttachmentUrl(f.letterId, f.reviewId, f.id)}" target="_blank">Lihat</a><a class="btn-sm btn-dark" href="${API.reviewAttachmentDownloadUrl(f.letterId, f.reviewId, f.id)}" download>Download</a>`}
       </div></td>
     </tr>`).join('');
 
@@ -267,6 +269,17 @@ function renderLetterDetail(letter, user){
       <div class="timeline-content">
         <div class="timeline-action">${h.aksi}</div>
         <div class="timeline-meta">oleh ${h.oleh} · ${fmtDate(h.createdAt)}</div>
+      </div>
+    </div>`).join('');
+
+  const signerRevisionRows = (letter.signerRevisions || []).map(r=>`
+    <div class="timeline-item">
+      <div class="timeline-dot orange">↺</div>
+      <div class="timeline-content">
+        <div class="timeline-action">${r.signerNama || 'Penandatangan'} — <span style="color:#c05621">Direvisi</span></div>
+        ${r.catatan?`<div class="timeline-meta">${r.catatan}</div>`:''}
+        ${signerRevisionAttachmentActions(letter, r)}
+        <div class="timeline-meta">${fmtDate(r.createdAt)}</div>
       </div>
     </div>`).join('');
 
@@ -331,6 +344,10 @@ function renderLetterDetail(letter, user){
           <div class="section-title" style="margin-bottom:14px">Alur Review</div>
           <div class="timeline">${rvRows||'<div class="text-muted" style="font-size:13px">Belum ada reviewer</div>'}</div>
         </div>
+        ${signerRevisionRows ? `<div class="section-card">
+          <div class="section-title" style="margin-bottom:14px">Revisi Penandatangan</div>
+          <div class="timeline">${signerRevisionRows}</div>
+        </div>` : ''}
         <div class="section-card">
           <div class="section-title" style="margin-bottom:14px">Riwayat Siklus</div>
           <div class="timeline">${logRows}</div>

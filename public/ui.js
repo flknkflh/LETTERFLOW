@@ -135,3 +135,22 @@ function reviewAttachmentActions(letter, review){
         </div>`).join('')}
     </div>`;
 }
+
+function signerRevisionAttachmentActions(letter, revision){
+  const files = revision && revision.attachments || [];
+  if(!files.length) return '';
+  return `
+    <div class="revision-attachments">
+      ${files.map(file => `
+        <div class="revision-file">
+          <div class="document-meta">
+            <strong>${file.originalName || 'Lampiran revisi penandatangan'}</strong>
+            <span>${file.mime || 'file'}${file.size ? ' • ' + (file.size / 1024 / 1024).toFixed(2) + ' MB' : ''}</span>
+          </div>
+          <div class="actions-row">
+            <a class="btn-sm btn-outline" href="${API.signerRevisionAttachmentUrl(letter.id, revision.id, file.id)}" target="_blank">Lihat</a>
+            <a class="btn-sm btn-dark" href="${API.signerRevisionAttachmentDownloadUrl(letter.id, revision.id, file.id)}" download>Download</a>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}

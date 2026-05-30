@@ -330,6 +330,30 @@ function bindGlobal() {
     a.onclick = e => { e.preventDefault(); switchView(a.dataset.view); };
   });
 
+  document.addEventListener('click', e => {
+    if (e.defaultPrevented) return;
+
+    const backRole = e.target.closest('#backToRoleBtn');
+    if (backRole) {
+      e.preventDefault();
+      showPage('role');
+      return;
+    }
+
+    const logout = e.target.closest('#logoutBtn');
+    if (logout) {
+      e.preventDefault();
+      doLogout();
+      return;
+    }
+
+    const nav = e.target.closest('.nav-link[data-view]');
+    if (nav) {
+      e.preventDefault();
+      switchView(nav.dataset.view);
+    }
+  });
+
   /* Create letter button */
   document.getElementById('sidebarCreateBtn').onclick = () => openCreateForm();
 

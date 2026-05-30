@@ -37,6 +37,8 @@ const API = {
   signatureDownloadUrl: (id)  => `/api/letters/${id}/signature-download`,
   reviewAttachmentUrl: (letterId, reviewId, attachmentId) => `/api/review-attachments/${letterId}/${reviewId}/${attachmentId}`,
   reviewAttachmentDownloadUrl: (letterId, reviewId, attachmentId) => `/api/review-attachments/${letterId}/${reviewId}/${attachmentId}?download=1`,
+  signerRevisionAttachmentUrl: (letterId, revisionId, attachmentId) => `/api/signer-revision-attachments/${letterId}/${revisionId}/${attachmentId}`,
+  signerRevisionAttachmentDownloadUrl: (letterId, revisionId, attachmentId) => `/api/signer-revision-attachments/${letterId}/${revisionId}/${attachmentId}?download=1`,
 
   /* Users */
   getUsers:   ()       => API.get('/api/users'),
