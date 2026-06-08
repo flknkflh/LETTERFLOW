@@ -45,6 +45,350 @@
   ],
   "letters": [
     {
+      "id": "surat-89d6d9cf2e",
+      "nomor": "asfnuaa",
+      "perihal": "ans dkas k",
+      "kategori": "Nota Dinas",
+      "prioritas": "Normal",
+      "status": "Ditandatangani",
+      "pembuatId": "usr-000",
+      "pembuatNama": "Super Admin",
+      "pembuatUnit": "Bag InArTala",
+      "reviewerIds": [
+        "usr-3512d3e524"
+      ],
+      "penandatanganId": "usr-e5824c18cc",
+      "ringkasan": "ndas",
+      "dokumen": null,
+      "catatan": [],
+      "reviewHistory": [
+        {
+          "id": "rv-4d4d118430",
+          "reviewerId": "usr-3512d3e524",
+          "reviewerNama": "reviuwer",
+          "status": "Disetujui",
+          "catatan": "",
+          "reviewedAt": "2026-06-07T14:37:08.148Z",
+          "attachments": []
+        }
+      ],
+      "tandaTangan": {
+        "image": "data:image/png;base64,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",
+        "nama": "ttd",
+        "jabatan": "jajaja",
+        "userId": "usr-e5824c18cc",
+        "signedAt": "2026-06-07T14:37:29.269Z"
+      },
+      "riwayat": [
+        {
+          "id": "log-1f350b1bb4",
+          "aksi": "Ditandatangani oleh ttd",
+          "oleh": "ttd",
+          "createdAt": "2026-06-07T14:37:29.269Z"
+        },
+        {
+          "id": "log-8d6870efd7",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-06-07T14:37:08.148Z"
+        },
+        {
+          "id": "log-babda642a6",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-06-07T14:36:56.584Z"
+        },
+        {
+          "id": "log-721ba0771d",
+          "aksi": "Surat dibuat",
+          "oleh": "Super Admin",
+          "createdAt": "2026-06-07T14:36:56.579Z"
+        }
+      ],
+      "createdAt": "2026-06-07T14:36:56.579Z",
+      "updatedAt": "2026-06-07T14:37:29.269Z"
+    },
+    {
+      "id": "surat-967470b5e8",
+      "nomor": "12345",
+      "perihal": "perizinan Sekolah",
+      "kategori": "Surat Keputusan (SK)",
+      "prioritas": "Urgent",
+      "status": "Ditandatangani",
+      "pembuatId": "usr-000",
+      "pembuatNama": "Super Admin",
+      "pembuatUnit": "Bag InArTala",
+      "reviewerIds": [
+        "usr-3512d3e524"
+      ],
+      "penandatanganId": "usr-e5824c18cc",
+      "ringkasan": "izin untuk meneruskan pendidikan",
+      "dokumen": null,
+      "catatan": [
+        {
+          "id": "cat-bf3194a35b",
+          "oleh": "Super Admin",
+          "peran": "super-admin",
+          "pesan": "sandxamncx",
+          "createdAt": "2026-05-31T11:14:50.401Z"
+        },
+        {
+          "id": "cat-b646c19734",
+          "oleh": "reviuwer",
+          "peran": "pereview",
+          "pesan": "Permintaan revisi: salah sekolah huruf gede",
+          "createdAt": "2026-05-31T11:13:27.696Z"
+        }
+      ],
+      "reviewHistory": [
+        {
+          "id": "rv-db262252da",
+          "reviewerId": "usr-3512d3e524",
+          "reviewerNama": "reviuwer",
+          "status": "Disetujui",
+          "catatan": "salah sekolah huruf gede",
+          "reviewedAt": "2026-05-31T11:16:17.855Z",
+          "attachments": []
+        }
+      ],
+      "tandaTangan": {
+        "image": "data:image/png;base64,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",
+        "nama": "ttd",
+        "jabatan": "jajaja",
+        "userId": "usr-e5824c18cc",
+        "signedAt": "2026-05-31T11:19:23.561Z"
+      },
+      "riwayat": [
+        {
+          "id": "log-f7f202cfd2",
+          "aksi": "Ditandatangani oleh ttd",
+          "oleh": "ttd",
+          "createdAt": "2026-05-31T11:19:23.561Z"
+        },
+        {
+          "id": "log-acd934f368",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-31T11:16:17.855Z"
+        },
+        {
+          "id": "log-0fbb74120a",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:15:44.634Z"
+        },
+        {
+          "id": "log-c9a7b6f386",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:15:44.520Z"
+        },
+        {
+          "id": "log-ecade042e1",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:15:44.515Z"
+        },
+        {
+          "id": "log-baa494e386",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:15:42.226Z"
+        },
+        {
+          "id": "log-dc5516d333",
+          "aksi": "Catatan baru dari Super Admin",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:14:50.402Z"
+        },
+        {
+          "id": "log-0cb11adc9c",
+          "aksi": "Review oleh reviuwer: Direvisi",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-31T11:13:27.696Z"
+        },
+        {
+          "id": "log-229264ccce",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:11:37.424Z"
+        },
+        {
+          "id": "log-149d377338",
+          "aksi": "Surat dibuat",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:11:37.006Z"
+        }
+      ],
+      "createdAt": "2026-05-31T11:11:37.006Z",
+      "updatedAt": "2026-05-31T11:19:23.561Z"
+    },
+    {
+      "id": "surat-90113ece1a",
+      "nomor": "Hdud",
+      "perihal": "Miaw Mawee",
+      "kategori": "Laporan",
+      "prioritas": "Normal",
+      "status": "Ditandatangani",
+      "pembuatId": "usr-000",
+      "pembuatNama": "Super Admin",
+      "pembuatUnit": "Bag InArTala",
+      "reviewerIds": [
+        "usr-3512d3e524"
+      ],
+      "penandatanganId": "usr-e5824c18cc",
+      "ringkasan": "aduaduadu",
+      "dokumen": null,
+      "catatan": [
+        {
+          "id": "cat-d4c7a329c3",
+          "oleh": "ttd",
+          "peran": "penandatangan",
+          "pesan": "Permintaan revisi dari penandatangan: jabatan revisi sudah naik pangkat terbaru",
+          "createdAt": "2026-05-31T11:20:02.999Z"
+        },
+        {
+          "id": "cat-31d4159e40",
+          "oleh": "ttd",
+          "peran": "penandatangan",
+          "pesan": "Permintaan revisi dari penandatangan: jabatan revisi sudah naik pangkat terbaru",
+          "createdAt": "2026-05-31T11:20:02.809Z"
+        },
+        {
+          "id": "cat-c3a332fe45",
+          "oleh": "reviuwer",
+          "peran": "pereview",
+          "pesan": "Permintaan revisi: ini juga ngasal",
+          "createdAt": "2026-05-31T11:15:16.617Z"
+        },
+        {
+          "id": "cat-e04e0e71e3",
+          "oleh": "reviuwer",
+          "peran": "pereview",
+          "pesan": "Permintaan revisi: ini juga ngasal",
+          "createdAt": "2026-05-31T11:15:11.008Z"
+        }
+      ],
+      "reviewHistory": [
+        {
+          "id": "rv-3646b1491a",
+          "reviewerId": "usr-3512d3e524",
+          "reviewerNama": "reviuwer",
+          "status": "Disetujui",
+          "catatan": "ini juga ngasal",
+          "reviewedAt": "2026-05-31T11:21:28.448Z",
+          "attachments": []
+        }
+      ],
+      "tandaTangan": {
+        "image": "data:image/png;base64,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",
+        "nama": "ttd",
+        "jabatan": "jajaja",
+        "userId": "usr-e5824c18cc",
+        "signedAt": "2026-05-31T11:22:55.102Z"
+      },
+      "riwayat": [
+        {
+          "id": "log-d7b2b50923",
+          "aksi": "Ditandatangani oleh ttd",
+          "oleh": "ttd",
+          "createdAt": "2026-05-31T11:22:55.102Z"
+        },
+        {
+          "id": "log-ba3e7cf3dc",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-31T11:21:28.448Z"
+        },
+        {
+          "id": "log-b5f79add0e",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:21:11.535Z"
+        },
+        {
+          "id": "log-f4043c51d8",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:21:11.340Z"
+        },
+        {
+          "id": "log-4d60299790",
+          "aksi": "Revisi diminta penandatangan: jabatan revisi sudah naik pangkat terbaru",
+          "oleh": "ttd",
+          "createdAt": "2026-05-31T11:20:02.999Z"
+        },
+        {
+          "id": "log-11ad68ec6b",
+          "aksi": "Revisi diminta penandatangan: jabatan revisi sudah naik pangkat terbaru",
+          "oleh": "ttd",
+          "createdAt": "2026-05-31T11:20:02.809Z"
+        },
+        {
+          "id": "log-fb79c3b1c6",
+          "aksi": "Review oleh reviuwer: Disetujui",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-31T11:17:44.720Z"
+        },
+        {
+          "id": "log-e5b0123ac4",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:17:16.844Z"
+        },
+        {
+          "id": "log-089a0f3dd2",
+          "aksi": "Surat diperbarui",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:17:16.620Z"
+        },
+        {
+          "id": "log-0e1a736ad9",
+          "aksi": "Review oleh reviuwer: Direvisi",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-31T11:15:16.617Z"
+        },
+        {
+          "id": "log-256ae41301",
+          "aksi": "Review oleh reviuwer: Direvisi",
+          "oleh": "reviuwer",
+          "createdAt": "2026-05-31T11:15:11.008Z"
+        },
+        {
+          "id": "log-834957d17a",
+          "aksi": "Surat disubmit untuk review",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:07:29.586Z"
+        },
+        {
+          "id": "log-d6c5dacb87",
+          "aksi": "Surat dibuat",
+          "oleh": "Super Admin",
+          "createdAt": "2026-05-31T11:07:29.275Z"
+        }
+      ],
+      "createdAt": "2026-05-31T11:07:29.275Z",
+      "updatedAt": "2026-05-31T11:22:55.102Z",
+      "signerRevisions": [
+        {
+          "id": "srv-9d2e031d84",
+          "signerId": "usr-e5824c18cc",
+          "signerNama": "ttd",
+          "catatan": "jabatan revisi sudah naik pangkat terbaru",
+          "attachments": [],
+          "createdAt": "2026-05-31T11:20:02.999Z"
+        },
+        {
+          "id": "srv-1e44bb1cf8",
+          "signerId": "usr-e5824c18cc",
+          "signerNama": "ttd",
+          "catatan": "jabatan revisi sudah naik pangkat terbaru",
+          "attachments": [],
+          "createdAt": "2026-05-31T11:20:02.809Z"
+        }
+      ]
+    },
+    {
       "id": "surat-73092ae93f",
       "nomor": "1243",
       "perihal": "surat_keluar",

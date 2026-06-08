@@ -6,10 +6,13 @@ window._letters     = [];
 window._allLetters  = [];
 window._users       = [];
 window._currentView = 'dashboard';
+window._remoteSuperAdmin = null;
 
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => {
   const saved = sessionStorage.getItem('lf_user');
+  const remoteSuper = sessionStorage.getItem('lf_remote_super_admin');
+  if (remoteSuper) window._remoteSuperAdmin = JSON.parse(remoteSuper);
   if (saved) {
     window._currentUser = JSON.parse(saved);
     showApp();
@@ -29,6 +32,7 @@ function showPage(name) {
 function showApp() {
   const user = window._currentUser;
   const isSuper = user.role === 'super-admin';
+  updateRemoteBar();
   // Show/hide nav items based on role
   document.getElementById('navUserMgmt').style.display =
     isSuper ? 'flex' : 'none';
@@ -45,6 +49,23 @@ function showApp() {
 
   showPage('app');
   refreshData().then(() => switchView('dashboard'));
+}
+
+function isRemoteMode() {
+  return !!window._remoteSuperAdmin;
+}
+
+function updateRemoteBar() {
+  const bar = document.getElementById('remoteBar');
+  if (!bar) return;
+  if (!isRemoteMode()) {
+    bar.classList.add('hidden');
+    return;
+  }
+  const user = window._currentUser;
+  document.getElementById('remoteBarTitle').textContent = `Remote: ${user.name}`;
+  document.getElementById('remoteBarSub').textContent = `${user.role} - ${user.unit || 'Tanpa unit'}`;
+  bar.classList.remove('hidden');
 }
 
 /* ── Data ── */
@@ -85,6 +106,10 @@ function updateInboxBadge() {
 
 /* ── Navigation ── */
 function switchView(view) {
+  if ((view === 'user-management' || view === 'file-database') && window._currentUser?.role !== 'super-admin') {
+    showToast('Halaman ini hanya untuk super admin', 'error');
+    view = 'dashboard';
+  }
   window._currentView = view;
   document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
   const panel = document.getElementById('view-' + view);
@@ -269,6 +294,34 @@ async function deleteUser(id) {
   });
 }
 
+async function startRemoteUser(id) {
+  if (window._currentUser?.role !== 'super-admin' || isRemoteMode()) {
+    showToast('Remote hanya bisa dimulai dari super admin', 'error');
+    return;
+  }
+  const target = window._users.find(u => u.id === id);
+  if (!target) {
+    showToast('User tidak ditemukan', 'error');
+    return;
+  }
+  window._remoteSuperAdmin = window._currentUser;
+  sessionStorage.setItem('lf_remote_super_admin', JSON.stringify(window._remoteSuperAdmin));
+  window._currentUser = target;
+  sessionStorage.setItem('lf_user', JSON.stringify(target));
+  showToast(`Remote sebagai ${target.name}`, 'success');
+  showApp();
+}
+
+function exitRemoteMode() {
+  if (!isRemoteMode()) return;
+  window._currentUser = window._remoteSuperAdmin;
+  window._remoteSuperAdmin = null;
+  sessionStorage.setItem('lf_user', JSON.stringify(window._currentUser));
+  sessionStorage.removeItem('lf_remote_super_admin');
+  showToast('Kembali ke super admin', 'success');
+  showApp();
+}
+
 /* ── Settings ── */
 async function resetAllData() {
   if (window._currentUser?.role !== 'super-admin') {
@@ -321,9 +374,11 @@ function bindGlobal() {
 
   document.getElementById('logoutFromRole').onclick = e => { e.preventDefault(); doLogout(); };
   document.getElementById('logoutBtn').onclick      = e => { e.preventDefault(); doLogout(); };
+  document.getElementById('exitRemoteBtn').onclick  = e => { e.preventDefault(); exitRemoteMode(); };
   document.getElementById('backToRoleBtn').onclick = e => {
-  e.preventDefault();
-  showPage('role');
+    e.preventDefault();
+    if (isRemoteMode()) exitRemoteMode();
+    else showPage('role');
   };
   /* Sidebar nav */
   document.querySelectorAll('.nav-link[data-view]').forEach(a => {
@@ -336,7 +391,8 @@ function bindGlobal() {
     const backRole = e.target.closest('#backToRoleBtn');
     if (backRole) {
       e.preventDefault();
-      showPage('role');
+      if (isRemoteMode()) exitRemoteMode();
+      else showPage('role');
       return;
     }
 
@@ -344,6 +400,13 @@ function bindGlobal() {
     if (logout) {
       e.preventDefault();
       doLogout();
+      return;
+    }
+
+    const exitRemote = e.target.closest('#exitRemoteBtn');
+    if (exitRemote) {
+      e.preventDefault();
+      exitRemoteMode();
       return;
     }
 
@@ -394,7 +457,9 @@ async function doLogin() {
     document.getElementById('loginBtn').textContent = 'Memuat...';
     const { user } = await API.login(nip, pass);
     window._currentUser = user;
+    window._remoteSuperAdmin = null;
     sessionStorage.setItem('lf_user', JSON.stringify(user));
+    sessionStorage.removeItem('lf_remote_super_admin');
     showPage('role');
   } catch(e) {
     errEl.textContent = e.message;
@@ -406,7 +471,9 @@ async function doLogin() {
 
 function doLogout() {
   sessionStorage.removeItem('lf_user');
+  sessionStorage.removeItem('lf_remote_super_admin');
   window._currentUser = null;
+  window._remoteSuperAdmin = null;
   window._letters = [];
   showPage('login');
   document.getElementById('loginNip').value = '';

@@ -158,6 +158,10 @@ function renderWorkflows(user, letters){
 
 /* ─── USER MANAGEMENT ─── */
 async function renderUserManagement(){
+  if (window._currentUser?.role !== 'super-admin') {
+    document.getElementById('view-user-management').innerHTML = emptyState('User Management hanya untuk super admin');
+    return;
+  }
   const {users} = await API.getUsers();
   window._users = users;
 
@@ -170,6 +174,7 @@ async function renderUserManagement(){
       </div>
       ${roleBadge(u.role)}
       <div class="actions-row" style="margin-left:12px">
+        ${window._currentUser?.role === 'super-admin' ? `<button class="btn-sm btn-dark" onclick="startRemoteUser('${u.id}')">Remote</button>` : ''}
         <button class="btn-sm btn-outline" onclick="editUser('${u.id}')">Edit</button>
         <button class="btn-sm btn-danger" onclick="deleteUser('${u.id}')">Hapus</button>
       </div>
