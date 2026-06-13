@@ -19,8 +19,33 @@ npm start
 Server berjalan dari komputer sendiri dan database tersimpan lokal di:
 
 ```text
-data/db.json
+PostgreSQL database: surat_online
 ```
+
+`data/db.json` sekarang hanya dipakai sebagai sumber migrasi awal jika tabel PostgreSQL masih kosong.
+
+## Setup PostgreSQL Lokal
+
+Default koneksi aplikasi:
+
+```text
+host: localhost
+port: 5432
+database: surat_online
+user: postgres
+password: postgres
+```
+
+Jika password/user berbeda, set environment variable sebelum menjalankan:
+
+```bash
+set PGUSER=postgres
+set PGPASSWORD=password_anda
+set PGDATABASE=surat_online
+npm start
+```
+
+Panduan ringkas ada di `docs/POSTGRES_SETUP.md`.
 
 ## Dashboard
 

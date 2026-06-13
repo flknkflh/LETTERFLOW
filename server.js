@@ -1,7 +1,7 @@
 /**
  * LetterFlow Enterprise — Server
  * Local-first, WiFi-accessible document management system.
- * All data stored in ./data/db.json
+ * Primary data stored in local PostgreSQL. ./data/db.json is used as initial migration seed.
  */
 
 const http    = require("http");
@@ -9,6 +9,7 @@ const fs      = require("fs");
 const path    = require("path");
 const crypto  = require("crypto");
 const os      = require("os");
+const postgres = require("./db-postgres");
 
 /* ───────────────────────── Config ───────────────────────── */
 const PORT       = Number(process.env.PORT || 3000);
@@ -529,15 +530,39 @@ function migrateDatabase(db) {
 }
 
 function readDb() {
+  throw new Error("Gunakan readDbAsync untuk PostgreSQL");
+}
+let postgresReady = null;
+function ensurePostgresReady() {
   ensureDatabase();
-  const db = migrateDatabase(JSON.parse(fs.readFileSync(DB_FILE, "utf8")));
-  writeDb(db);
+  if (!postgresReady) {
+    postgresReady = postgres.initPostgres(DB_FILE, migrateDatabase).catch(err => {
+      postgresReady = null;
+      throw err;
+    });
+  }
+  return postgresReady;
+}
+async function readDbAsync() {
+  await ensurePostgresReady();
+  const db = migrateDatabase(await postgres.readState());
+  await postgres.writeState(db);
   return db;
 }
-function writeDb(db)  { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
+async function writeDb(db) { await postgres.writeState(db); }
 
 function addHistory(letter, aksi, oleh) {
   letter.riwayat.unshift({ id: makeId("log"), aksi, oleh, createdAt: nowIso() });
+}
+
+function formatErrorMessage(err) {
+  if (!err) return "Terjadi kesalahan tidak dikenal";
+  if (err.message) return err.message;
+  if (err.code) return `Kode error: ${err.code}`;
+  if (Array.isArray(err.errors) && err.errors.length) {
+    return err.errors.map(formatErrorMessage).join("; ");
+  }
+  return String(err);
 }
 
 /* ──────────────────────── API Router ────────────────────── */
@@ -549,7 +574,8 @@ async function handleApi(req, res, pathname) {
     return;
   }
 
-  const db = readDb();
+  await ensurePostgresReady();
+  const db = await readDbAsync();
 
   /* ── Auth ── */
   if (req.method === "POST" && pathname === "/api/auth/login") {
@@ -565,6 +591,26 @@ async function handleApi(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/users") {
     const safeUsers = db.users.map(({ password: _, ...u }) => u);
     sendJson(res, 200, { users: safeUsers });
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/search") {
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+    const role = url.searchParams.get("role");
+    const userId = url.searchParams.get("userId");
+    const scope = url.searchParams.get("scope") || "letters";
+    const mode = url.searchParams.get("mode") || "all";
+    const category = url.searchParams.get("category") || "";
+    const q = url.searchParams.get("q") || "";
+
+    const letters = scope === "users"
+      ? []
+      : await postgres.searchLetters({ role, userId, mode, category, q });
+    const users = scope === "letters" || role !== "super-admin"
+      ? []
+      : await postgres.searchUsers({ q, category });
+
+    sendJson(res, 200, { letters, users });
     return;
   }
 
@@ -602,7 +648,7 @@ async function handleApi(req, res, pathname) {
       resetBy: currentSuper.nip || currentSuper.name || "superadmin"
     };
     clearUploadsDirectory();
-    writeDb(db);
+    await writeDb(db);
     const { password: _, ...safeUser } = currentSuper;
     sendJson(res, 200, { ok: true, user: safeUser, users: [safeUser], letters: [] });
     return;
@@ -626,7 +672,7 @@ async function handleApi(req, res, pathname) {
       unit: String(body.unit || "").trim(),
     };
     db.users.push(newUser);
-    writeDb(db);
+    await writeDb(db);
     const { password: _, ...safeUser } = newUser;
     sendJson(res, 201, { user: safeUser });
     return;
@@ -639,7 +685,7 @@ async function handleApi(req, res, pathname) {
       const idx = db.users.findIndex(u => u.id === uid);
       if (idx === -1) { sendJson(res, 404, { error: "User tidak ditemukan" }); return; }
       db.users.splice(idx, 1);
-      writeDb(db);
+      await writeDb(db);
       sendJson(res, 200, { ok: true });
       return;
     }
@@ -653,7 +699,7 @@ async function handleApi(req, res, pathname) {
       if (body.unit) u.unit = String(body.unit).trim();
       if (body.password) u.password = String(body.password);
       db.users[idx] = u;
-      writeDb(db);
+      await writeDb(db);
       const { password: _, ...safe } = u;
       sendJson(res, 200, { user: safe });
       return;
@@ -738,7 +784,7 @@ async function handleApi(req, res, pathname) {
     if (letter.reviewerIds.length > 0) letter.status = "Menunggu Review";
     addHistory(letter, "Surat dibuat", letter.pembuatNama);
     db.letters.unshift(letter);
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 201, { letter });
     return;
   }
@@ -807,7 +853,7 @@ async function handleApi(req, res, pathname) {
     }
     letter.updatedAt = nowIso();
     addHistory(letter, "Surat diperbarui", body.updatedBy || "System");
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 200, { letter });
     return;
   }
@@ -816,7 +862,7 @@ async function handleApi(req, res, pathname) {
   if (req.method === "DELETE" && !action) {
     const idx = db.letters.findIndex(l => l.id === lid);
     db.letters.splice(idx, 1);
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 200, { ok: true });
     return;
   }
@@ -830,7 +876,7 @@ async function handleApi(req, res, pathname) {
     letter.catatan.unshift(comment);
     letter.updatedAt = nowIso();
     addHistory(letter, `Catatan baru dari ${comment.oleh}`, comment.oleh);
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 201, { letter, comment });
     return;
   }
@@ -869,7 +915,7 @@ async function handleApi(req, res, pathname) {
     }
 
     letter.updatedAt = nowIso();
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 200, { letter });
     return;
   }
@@ -890,7 +936,7 @@ async function handleApi(req, res, pathname) {
     letter.status    = "Ditandatangani";
     letter.updatedAt = nowIso();
     addHistory(letter, `Ditandatangani oleh ${letter.tandaTangan.nama}`, letter.tandaTangan.nama);
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 201, { letter });
     return;
   }
@@ -907,7 +953,7 @@ async function handleApi(req, res, pathname) {
     });
     letter.updatedAt = nowIso();
     addHistory(letter, "Surat disubmit untuk review", letter.pembuatNama);
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 200, { letter });
     return;
   }
@@ -946,7 +992,7 @@ async function handleApi(req, res, pathname) {
     });
     letter.updatedAt = nowIso();
     addHistory(letter, `Revisi diminta penandatangan: ${catatan}`, revision.signerNama);
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 200, { letter });
     return;
   }
@@ -981,12 +1027,12 @@ function serveStatic(req, res, pathname) {
 
 /* ─────────────────────── HTTP Server ────────────────────── */
 function createServer() {
-  ensureDatabase();
+  ensurePostgresReady().catch(err => console.error("PostgreSQL init gagal:", formatErrorMessage(err)));
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     if (url.pathname.startsWith("/api/")) {
       try { await handleApi(req, res, url.pathname); }
-      catch (e) { sendJson(res, 500, { error: e.message }); }
+      catch (e) { sendJson(res, 500, { error: formatErrorMessage(e) }); }
       return;
     }
     serveStatic(req, res, url.pathname);
@@ -1010,3 +1056,4 @@ function startServer(port = PORT) {
 if (require.main === module) startServer(PORT);
 
 module.exports = { createServer, startServer };
+

@@ -23,6 +23,7 @@ const API = {
     return API.get('/api/letters' + q);
   },
   getLetter:        (id)      => API.get(`/api/letters/${id}`),
+  search:           (params)  => API.get('/api/search?' + new URLSearchParams(params).toString()),
   createLetter:     (data)    => API.post('/api/letters', data),
   updateLetter:     (id, d)   => API.put(`/api/letters/${id}`, d),
   deleteLetter:     (id)      => API.delete(`/api/letters/${id}`),

@@ -138,6 +138,27 @@ ul,ol{list-style:none}
   font-size:13px;width:200px;background:#fafbfc;transition:border-color .2s;
 }
 .search-wrap input:focus{border-color:#1a2236;background:#fff}
+.search-panel{
+  position:absolute;right:0;top:calc(100% + 8px);width:430px;max-height:520px;overflow:auto;
+  background:#fff;border:1px solid #e8edf5;border-radius:12px;box-shadow:0 18px 50px rgba(15,23,42,.16);
+  padding:12px;z-index:80;
+}
+.search-panel-row{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+.search-chip{padding:7px 10px;border:1px solid #e2e8f0;border-radius:999px;font-size:12px;font-weight:700;color:#5a6478;background:#fff}
+.search-chip.active{background:#1a2236;color:#fff;border-color:#1a2236}
+.search-category-wrap{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin-bottom:10px}
+.search-category-wrap label{font-size:11px;font-weight:800;color:#8892a4;text-transform:uppercase}
+.search-category-wrap select{height:34px;border:1.5px solid #e2e8f0;border-radius:8px;padding:0 10px;font-size:13px;background:#fafbfc}
+.search-results{display:flex;flex-direction:column;gap:6px}
+.search-result-item{
+  display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border:1px solid #edf1f7;border-radius:10px;
+  cursor:pointer;transition:background .15s,border-color .15s;
+}
+.search-result-item:hover{background:#f8fafc;border-color:#cbd5e1}
+.search-result-title{font-size:13px;font-weight:800;color:#1a2236}
+.search-result-sub{font-size:11px;color:#8892a4;margin-top:2px}
+.search-result-type{font-size:10px;font-weight:800;text-transform:uppercase;color:#5a6478;background:#f1f5f9;border-radius:999px;padding:4px 7px;height:max-content}
+.search-empty{padding:22px 10px;text-align:center;color:#8892a4;font-size:12px}
 .icon-btn{
   width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;
   color:#5a6478;border:1.5px solid #e2e8f0;transition:all .15s;position:relative;
@@ -413,6 +434,7 @@ ul,ol{list-style:none}
   .tab-btn{white-space:normal;padding:6px 14px}
   .search-wrap{flex:0 0 auto;min-width:0}
   .search-wrap input{width:200px;height:auto}
+  .search-panel{left:0;right:auto;width:430px}
   .quick-verify-btn{display:flex}
   .avatar-btn,.icon-btn{width:36px;height:36px;flex:0 0 auto}
 

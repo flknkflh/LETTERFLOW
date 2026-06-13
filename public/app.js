@@ -7,6 +7,8 @@ window._allLetters  = [];
 window._users       = [];
 window._currentView = 'dashboard';
 window._remoteSuperAdmin = null;
+window._searchState = { mode: 'all', scope: 'letters', category: 'perihal' };
+let searchTimer = null;
 
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -175,6 +177,124 @@ function switchViewPanel(view) {
   const panel = document.getElementById('view-' + view);
   if (panel) panel.classList.add('active');
   window._currentView = view;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function letterCategoryOptions() {
+  return [
+    ['perihal', 'Jenis/Nama Surat'],
+    ['nomor', 'No Surat'],
+    ['kategori', 'Kategori Surat'],
+    ['status', 'Status'],
+    ['prioritas', 'Prioritas'],
+    ['pembuatNama', 'Nama Pembuat'],
+    ['pembuatUnit', 'Unit Pembuat'],
+    ['ringkasan', 'Ringkasan']
+  ];
+}
+
+function userCategoryOptions() {
+  return [
+    ['name', 'Nama Akun'],
+    ['nip', 'NIP/Username'],
+    ['role', 'Role'],
+    ['unit', 'Unit']
+  ];
+}
+
+function setSearchCategoryOptions() {
+  const select = document.getElementById('searchCategory');
+  const options = window._searchState.scope === 'users' ? userCategoryOptions() : letterCategoryOptions();
+  if (!options.some(([value]) => value === window._searchState.category)) {
+    window._searchState.category = options[0][0];
+  }
+  select.innerHTML = options.map(([value, label]) =>
+    `<option value="${value}" ${value === window._searchState.category ? 'selected' : ''}>${label}</option>`
+  ).join('');
+}
+
+function openSearchPanel() {
+  const panel = document.getElementById('searchPanel');
+  const input = document.getElementById('globalSearch');
+  panel.classList.remove('hidden');
+  document.querySelectorAll('.super-only').forEach(el => {
+    el.style.display = window._currentUser?.role === 'super-admin' ? '' : 'none';
+  });
+  setSearchCategoryOptions();
+  document.getElementById('searchCategoryWrap').classList.toggle('hidden', window._searchState.mode !== 'category');
+  if (!input.value.trim()) renderSearchHint();
+}
+
+function closeSearchPanel() {
+  document.getElementById('searchPanel').classList.add('hidden');
+}
+
+function renderSearchHint() {
+  const label = window._searchState.mode === 'category' ? 'Pilih kategori lalu ketik kata kunci.' : 'Cari nama surat, nomor, pembuat, status, atau ringkasan.';
+  document.getElementById('searchResults').innerHTML = `<div class="search-empty">${label}</div>`;
+}
+
+function renderSearchResults(result) {
+  const letters = result.letters || [];
+  const users = result.users || [];
+  if (!letters.length && !users.length) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Tidak ada hasil yang cocok.</div>';
+    return;
+  }
+  const letterHtml = letters.map(l => `
+    <div class="search-result-item" onclick="openSearchLetter('${l.id}')">
+      <div>
+        <div class="search-result-title">${escapeHtml(l.perihal || 'Surat')}</div>
+        <div class="search-result-sub">${escapeHtml(l.nomor || 'Tanpa nomor')} - ${escapeHtml(l.kategori || '-')} - ${escapeHtml(l.pembuatNama || '-')}</div>
+      </div>
+      <span class="search-result-type">${escapeHtml(l.status || 'surat')}</span>
+    </div>
+  `).join('');
+  const userHtml = users.map(u => `
+    <div class="search-result-item" onclick="switchView('user-management')">
+      <div>
+        <div class="search-result-title">${escapeHtml(u.name || 'User')}</div>
+        <div class="search-result-sub">${escapeHtml(u.nip || '-')} - ${escapeHtml(u.role || '-')} - ${escapeHtml(u.unit || '-')}</div>
+      </div>
+      <span class="search-result-type">Akun</span>
+    </div>
+  `).join('');
+  document.getElementById('searchResults').innerHTML = letterHtml + userHtml;
+}
+
+async function runGlobalSearch() {
+  const input = document.getElementById('globalSearch');
+  const q = input.value.trim();
+  openSearchPanel();
+  if (!q && window._searchState.mode !== 'category') {
+    renderSearchHint();
+    return;
+  }
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Mencari...</div>';
+  try {
+    const result = await API.search({
+      role: window._currentUser.role,
+      userId: window._currentUser.id,
+      scope: window._searchState.scope,
+      mode: window._searchState.mode,
+      category: window._searchState.category,
+      q
+    });
+    renderSearchResults(result);
+  } catch (e) {
+    document.getElementById('searchResults').innerHTML = `<div class="search-empty">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function openSearchLetter(id) {
+  closeSearchPanel();
+  document.getElementById('globalSearch').value = '';
+  await openLetterDetail(id);
 }
 
 /* ── Letter actions ── */
@@ -414,7 +534,10 @@ function bindGlobal() {
     if (nav) {
       e.preventDefault();
       switchView(nav.dataset.view);
+      return;
     }
+
+    if (!e.target.closest('.search-wrap')) closeSearchPanel();
   });
 
   /* Create letter button */
@@ -430,11 +553,40 @@ function bindGlobal() {
   });
 
   /* Global search */
-  document.getElementById('globalSearch').oninput = e => {
-    const q = e.target.value.toLowerCase();
-    window._letters = window._letters; // just re-render
-    renderView(window._currentView);
+  document.getElementById('globalSearch').onfocus = openSearchPanel;
+  document.getElementById('globalSearch').onclick = openSearchPanel;
+  document.getElementById('globalSearch').oninput = () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(runGlobalSearch, 180);
   };
+  document.getElementById('searchCategory').onchange = e => {
+    window._searchState.category = e.target.value;
+    runGlobalSearch();
+  };
+  document.querySelectorAll('[data-search-mode]').forEach(btn => {
+    btn.onclick = e => {
+      e.preventDefault();
+      window._searchState.mode = btn.dataset.searchMode;
+      window._searchState.scope = 'letters';
+      document.querySelectorAll('.search-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('searchCategoryWrap').classList.toggle('hidden', window._searchState.mode !== 'category');
+      setSearchCategoryOptions();
+      runGlobalSearch();
+    };
+  });
+  document.querySelectorAll('[data-search-scope]').forEach(btn => {
+    btn.onclick = e => {
+      e.preventDefault();
+      window._searchState.scope = btn.dataset.searchScope;
+      window._searchState.mode = 'category';
+      document.querySelectorAll('.search-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('searchCategoryWrap').classList.remove('hidden');
+      setSearchCategoryOptions();
+      runGlobalSearch();
+    };
+  });
 
   /* Modal close on overlay click */
   document.getElementById('modal-overlay').onclick = e => {
