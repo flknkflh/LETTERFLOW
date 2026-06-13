@@ -546,7 +546,6 @@ function ensurePostgresReady() {
 async function readDbAsync() {
   await ensurePostgresReady();
   const db = migrateDatabase(await postgres.readState());
-  await postgres.writeState(db);
   return db;
 }
 async function writeDb(db) { await postgres.writeState(db); }
