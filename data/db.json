@@ -10,7 +10,7 @@
       "id": "usr-000",
       "name": "Super Admin",
       "nip": "superadmin",
-      "password": "super123",
+      "password": "scrypt$e17ed0f1d87773a69edc775e8f569cf5$9b49a64fd86d65b746d85d5cbfcb89f9364276f0e188a55bd0cf1104c0b7b62264b8b942cff36df976fa3989045ed5060df0407d4804bb19ae60cde4cd7628f3",
       "role": "super-admin",
       "avatar": "SA",
       "unit": "Bag InArTala"
@@ -19,7 +19,7 @@
       "id": "usr-3512d3e524",
       "name": "reviuwer",
       "nip": "1234",
-      "password": "1234",
+      "password": "scrypt$6bea651a91b73fc2ce00300bf0b86c6c$1d75537e7d7ab15f8437ab23ac30ea406a876dfc4351fc04f2fa841f875bd235ed33812eaac7822cd7c3c7d2c8ac797cd2d3d05caed4d951662fc98eab1d84fd",
       "role": "pereview",
       "avatar": "R",
       "unit": "bla bla bla"
@@ -28,7 +28,7 @@
       "id": "usr-e5824c18cc",
       "name": "ttd",
       "nip": "12345",
-      "password": "12345",
+      "password": "scrypt$1ff59013f0c78317b79c983699f75ead$6bf5fd01adc5fe8d769af0a4560d5dd5235298ebaf70f2628f47f2bb38e76fa3f3151463e6f6c21dd2e33a1e5299d8a0511310131538ee10e5bd5a2dc6379e6c",
       "role": "penandatangan",
       "avatar": "T",
       "unit": "jajaja"
@@ -37,7 +37,7 @@
       "id": "usr-af7865dc95",
       "name": "pembuat1",
       "nip": "123",
-      "password": "123",
+      "password": "scrypt$9a55cf3e8304f5a10ba2fe4d018ff614$4b2989af133fc9e4077221b54e9d903d8cdb9d5bc9b1ac9836dc9d26c94302bff77baeb197806274f222026adedab95869877a19ccac7f731bbbd04392d7b6c7",
       "role": "pembuat",
       "avatar": "P",
       "unit": "adf"

@@ -2,7 +2,12 @@
 const API = {
   base: '',
   async req(method, path, body){
-    const opts = { method, headers:{'Content-Type':'application/json'} };
+    const headers = {'Content-Type':'application/json'};
+    const token = sessionStorage.getItem('lf_token');
+    const remoteUserId = sessionStorage.getItem('lf_remote_user_id');
+    if (token) headers.Authorization = `Bearer ${token}`;
+    if (remoteUserId) headers['X-Remote-User-Id'] = remoteUserId;
+    const opts = { method, headers };
     if(body) opts.body = JSON.stringify(body);
     const r = await fetch(this.base + path, opts);
     const json = await r.json().catch(()=>({}));
@@ -13,6 +18,19 @@ const API = {
   post:   (p, body) => API.req('POST',   p, body),
   put:    (p, body) => API.req('PUT',    p, body),
   delete: (p)       => API.req('DELETE', p),
+  authQuery(){
+    const params = new URLSearchParams();
+    const token = sessionStorage.getItem('lf_token');
+    const remoteUserId = sessionStorage.getItem('lf_remote_user_id');
+    if (token) params.set('token', token);
+    if (remoteUserId) params.set('remoteUserId', remoteUserId);
+    return params.toString();
+  },
+  withAuthUrl(url){
+    const q = API.authQuery();
+    if (!q) return url;
+    return `${url}${url.includes('?') ? '&' : '?'}${q}`;
+  },
 
   /* Auth */
   login: (nip, password) => API.post('/api/auth/login', {nip, password}),
@@ -32,14 +50,14 @@ const API = {
   submitReview:              (id, d) => API.post(`/api/letters/${id}/review`, d),
   submitSignature:           (id, d) => API.post(`/api/letters/${id}/signature`, d),
   requestRevisionFromSigner: (id, d) => API.post(`/api/letters/${id}/request-revision`, d),
-  documentUrl:      (id)      => `/api/letters/${id}/document`,
-  documentDownloadUrl: (id)   => `/api/letters/${id}/document-download`,
-  signatureUrl:     (id)      => `/api/letters/${id}/signature-image`,
-  signatureDownloadUrl: (id)  => `/api/letters/${id}/signature-download`,
-  reviewAttachmentUrl: (letterId, reviewId, attachmentId) => `/api/review-attachments/${letterId}/${reviewId}/${attachmentId}`,
-  reviewAttachmentDownloadUrl: (letterId, reviewId, attachmentId) => `/api/review-attachments/${letterId}/${reviewId}/${attachmentId}?download=1`,
-  signerRevisionAttachmentUrl: (letterId, revisionId, attachmentId) => `/api/signer-revision-attachments/${letterId}/${revisionId}/${attachmentId}`,
-  signerRevisionAttachmentDownloadUrl: (letterId, revisionId, attachmentId) => `/api/signer-revision-attachments/${letterId}/${revisionId}/${attachmentId}?download=1`,
+  documentUrl:      (id)      => API.withAuthUrl(`/api/letters/${id}/document`),
+  documentDownloadUrl: (id)   => API.withAuthUrl(`/api/letters/${id}/document-download`),
+  signatureUrl:     (id)      => API.withAuthUrl(`/api/letters/${id}/signature-image`),
+  signatureDownloadUrl: (id)  => API.withAuthUrl(`/api/letters/${id}/signature-download`),
+  reviewAttachmentUrl: (letterId, reviewId, attachmentId) => API.withAuthUrl(`/api/review-attachments/${letterId}/${reviewId}/${attachmentId}`),
+  reviewAttachmentDownloadUrl: (letterId, reviewId, attachmentId) => API.withAuthUrl(`/api/review-attachments/${letterId}/${reviewId}/${attachmentId}?download=1`),
+  signerRevisionAttachmentUrl: (letterId, revisionId, attachmentId) => API.withAuthUrl(`/api/signer-revision-attachments/${letterId}/${revisionId}/${attachmentId}`),
+  signerRevisionAttachmentDownloadUrl: (letterId, revisionId, attachmentId) => API.withAuthUrl(`/api/signer-revision-attachments/${letterId}/${revisionId}/${attachmentId}?download=1`),
 
   /* Users */
   getUsers:   ()       => API.get('/api/users'),
@@ -50,5 +68,5 @@ const API = {
   /* Super admin */
   getFiles:   ()       => API.get('/api/files'),
   resetData:  ()       => API.post('/api/admin/reset-data', { confirm: 'RESET' }),
-  backupUrl:  ()       => '/api/admin/backup.zip',
+  backupUrl:  ()       => API.withAuthUrl('/api/admin/backup.zip'),
 };

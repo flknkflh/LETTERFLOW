@@ -61,12 +61,18 @@ function sendJson(res, status, payload) {
 }
 
 function sendFile(res, filePath, downloadName, mimeType, disposition = "attachment") {
-  fs.readFile(filePath, (err, content) => {
+  const resolved = path.resolve(filePath);
+  const uploadsRoot = path.resolve(UPLOADS_DIR);
+  if (resolved !== uploadsRoot && !resolved.startsWith(uploadsRoot + path.sep)) {
+    sendJson(res, 403, { error: "Akses file ditolak" });
+    return;
+  }
+  fs.readFile(resolved, (err, content) => {
     if (err) {
       sendJson(res, 404, { error: "File tidak ditemukan" });
       return;
     }
-    const safeName = String(downloadName || path.basename(filePath)).replace(/"/g, "");
+    const safeName = String(downloadName || path.basename(resolved)).replace(/"/g, "");
     res.writeHead(200, {
       "Content-Type": mimeType || MIME_TYPES[path.extname(filePath)] || "application/octet-stream",
       "Content-Length": content.length,
@@ -228,6 +234,128 @@ function getDefaultSuperAdmin() {
     avatar: "SA",
     unit: "Bag InArTala"
   };
+}
+
+const sessions = new Map();
+const loginAttempts = new Map();
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 8;
+
+function safeUser(user) {
+  if (!user) return null;
+  const { password: _, ...out } = user;
+  return out;
+}
+
+function isPasswordHash(value) {
+  return typeof value === "string" && value.startsWith("scrypt$");
+}
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(String(password), salt, 64).toString("hex");
+  return `scrypt$${salt}$${hash}`;
+}
+
+function verifyPassword(password, stored) {
+  if (!isPasswordHash(stored)) return String(password) === String(stored || "");
+  const [, salt, hash] = String(stored).split("$");
+  if (!salt || !hash) return false;
+  const actual = crypto.scryptSync(String(password), salt, 64);
+  const expected = Buffer.from(hash, "hex");
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+}
+
+function createSession(user) {
+  const token = crypto.randomBytes(32).toString("hex");
+  sessions.set(token, { userId: user.id, expiresAt: Date.now() + SESSION_TTL_MS });
+  return token;
+}
+
+function loginAttemptKey(req, nip) {
+  const ip = req.socket && req.socket.remoteAddress || "unknown";
+  return `${ip}:${String(nip || "").toLowerCase()}`;
+}
+
+function isLoginLimited(req, nip) {
+  const key = loginAttemptKey(req, nip);
+  const now = Date.now();
+  const item = loginAttempts.get(key);
+  if (!item || item.resetAt < now) {
+    loginAttempts.set(key, { count: 0, resetAt: now + LOGIN_WINDOW_MS });
+    return false;
+  }
+  return item.count >= LOGIN_MAX_ATTEMPTS;
+}
+
+function recordLoginFailure(req, nip) {
+  const key = loginAttemptKey(req, nip);
+  const now = Date.now();
+  const item = loginAttempts.get(key) || { count: 0, resetAt: now + LOGIN_WINDOW_MS };
+  item.count += 1;
+  loginAttempts.set(key, item);
+}
+
+function clearLoginFailures(req, nip) {
+  loginAttempts.delete(loginAttemptKey(req, nip));
+}
+
+function getRequestToken(req, url) {
+  const auth = req.headers.authorization || "";
+  if (auth.startsWith("Bearer ")) return auth.slice(7).trim();
+  return url.searchParams.get("token") || "";
+}
+
+function authenticateRequest(req, db) {
+  const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  const token = getRequestToken(req, url);
+  const session = token && sessions.get(token);
+  if (!session || session.expiresAt < Date.now()) {
+    if (token) sessions.delete(token);
+    return { error: "Sesi tidak valid atau sudah kedaluwarsa", status: 401 };
+  }
+
+  const actor = db.users.find(u => u.id === session.userId);
+  if (!actor) {
+    sessions.delete(token);
+    return { error: "User sesi tidak ditemukan", status: 401 };
+  }
+  session.expiresAt = Date.now() + SESSION_TTL_MS;
+
+  const remoteUserId = req.headers["x-remote-user-id"] || url.searchParams.get("remoteUserId");
+  let effectiveUser = actor;
+  if (remoteUserId) {
+    if (actor.role !== "super-admin") {
+      return { error: "Remote hanya boleh dilakukan super admin", status: 403 };
+    }
+    const target = db.users.find(u => u.id === remoteUserId);
+    if (!target) return { error: "User remote tidak ditemukan", status: 404 };
+    effectiveUser = target;
+  }
+
+  return { actor, effectiveUser, token };
+}
+
+function requireRole(user, roles) {
+  return user && roles.includes(user.role);
+}
+
+function cleanText(value, maxLength = 5000) {
+  return String(value || "")
+    .replace(/[<>]/g, "")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function canAccessLetterServer(letter, user) {
+  if (!letter || !user) return false;
+  if (user.role === "super-admin" || user.role === "pemonitor") return true;
+  if (user.role === "pembuat") return letter.pembuatId === user.id;
+  if (user.role === "pereview") return (letter.reviewerIds || []).includes(user.id);
+  if (user.role === "penandatangan") return letter.penandatanganId === user.id;
+  return false;
 }
 
 const CRC_TABLE = (() => {
@@ -424,11 +552,11 @@ function ensureDatabase() {
     meta: { appName: "LetterFlow Enterprise", createdAt: nowIso() },
 
     users: [
-      { id: "usr-000", name: "Super Admin",     nip: "superadmin", password: "super123", role: "super-admin",   avatar: "SA", unit: "Bag InArTala" },
-      { id: "usr-001", name: "Admin Sistem",    nip: "admin",    password: "admin123",  role: "pembuat",       avatar: "AS", unit: "Bag InArTala" },
-      { id: "usr-002", name: "Budi Santoso",    nip: "budi",     password: "review123", role: "pereview",      avatar: "BS", unit: "Kepala Divisi Operasional" },
-      { id: "usr-003", name: "Citra Handayani", nip: "citra",    password: "sign123",   role: "penandatangan", avatar: "CH", unit: "Direktur Operasional" },
-      { id: "usr-004", name: "Dwi Prasetyo",    nip: "dwi",      password: "monitor123",role: "pemonitor",     avatar: "DP", unit: "Monitoring & Evaluasi" },
+      { id: "usr-000", name: "Super Admin",     nip: "superadmin", password: hashPassword("super123"),  role: "super-admin",   avatar: "SA", unit: "Bag InArTala" },
+      { id: "usr-001", name: "Admin Sistem",    nip: "admin",      password: hashPassword("admin123"),  role: "pembuat",       avatar: "AS", unit: "Bag InArTala" },
+      { id: "usr-002", name: "Budi Santoso",    nip: "budi",       password: hashPassword("review123"), role: "pereview",      avatar: "BS", unit: "Kepala Divisi Operasional" },
+      { id: "usr-003", name: "Citra Handayani", nip: "citra",      password: hashPassword("sign123"),   role: "penandatangan", avatar: "CH", unit: "Direktur Operasional" },
+      { id: "usr-004", name: "Dwi Prasetyo",    nip: "dwi",        password: hashPassword("monitor123"),role: "pemonitor",     avatar: "DP", unit: "Monitoring & Evaluasi" },
     ],
 
     letters: [
@@ -526,6 +654,11 @@ function migrateDatabase(db) {
   if (!db.users.some(u => u.role === "super-admin")) {
     db.users.unshift(getDefaultSuperAdmin());
   }
+  db.users.forEach(user => {
+    if (user.password && !isPasswordHash(user.password)) {
+      user.password = hashPassword(user.password);
+    }
+  });
   return db;
 }
 
@@ -545,7 +678,11 @@ function ensurePostgresReady() {
 }
 async function readDbAsync() {
   await ensurePostgresReady();
-  const db = migrateDatabase(await postgres.readState());
+  const raw = await postgres.readState();
+  const beforePasswords = JSON.stringify((raw.users || []).map(u => [u.id, u.password]));
+  const db = migrateDatabase(raw);
+  const afterPasswords = JSON.stringify((db.users || []).map(u => [u.id, u.password]));
+  if (beforePasswords !== afterPasswords) await postgres.writeState(db);
   return db;
 }
 async function writeDb(db) { await postgres.writeState(db); }
@@ -568,7 +705,7 @@ function formatErrorMessage(err) {
 async function handleApi(req, res, pathname) {
   // CORS preflight
   if (req.method === "OPTIONS") {
-    res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE", "Access-Control-Allow-Headers": "Content-Type" });
+    res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE", "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Remote-User-Id" });
     res.end();
     return;
   }
@@ -579,14 +716,30 @@ async function handleApi(req, res, pathname) {
   /* ── Auth ── */
   if (req.method === "POST" && pathname === "/api/auth/login") {
     const { nip, password } = await parseBody(req);
-    const user = db.users.find(u => u.nip === nip && u.password === password);
-    if (!user) { sendJson(res, 401, { error: "NIP atau password salah" }); return; }
-    const { password: _, ...safeUser } = user;
-    sendJson(res, 200, { user: safeUser });
+    if (isLoginLimited(req, nip)) {
+      sendJson(res, 429, { error: "Terlalu banyak percobaan login. Coba lagi beberapa menit." });
+      return;
+    }
+    const user = db.users.find(u => u.nip === nip && verifyPassword(password, u.password));
+    if (!user) {
+      recordLoginFailure(req, nip);
+      sendJson(res, 401, { error: "NIP atau password salah" });
+      return;
+    }
+    clearLoginFailures(req, nip);
+    const token = createSession(user);
+    sendJson(res, 200, { user: safeUser(user), token });
     return;
   }
 
   /* ── Users ── */
+  const auth = authenticateRequest(req, db);
+  if (auth.error) {
+    sendJson(res, auth.status, { error: auth.error });
+    return;
+  }
+  const currentUser = auth.effectiveUser;
+
   if (req.method === "GET" && pathname === "/api/users") {
     const safeUsers = db.users.map(({ password: _, ...u }) => u);
     sendJson(res, 200, { users: safeUsers });
@@ -595,8 +748,6 @@ async function handleApi(req, res, pathname) {
 
   if (req.method === "GET" && pathname === "/api/search") {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-    const role = url.searchParams.get("role");
-    const userId = url.searchParams.get("userId");
     const scope = url.searchParams.get("scope") || "letters";
     const mode = url.searchParams.get("mode") || "all";
     const category = url.searchParams.get("category") || "";
@@ -604,8 +755,8 @@ async function handleApi(req, res, pathname) {
 
     const letters = scope === "users"
       ? []
-      : await postgres.searchLetters({ role, userId, mode, category, q });
-    const users = scope === "letters" || role !== "super-admin"
+      : await postgres.searchLetters({ role: currentUser.role, userId: currentUser.id, mode, category, q });
+    const users = scope === "letters" || currentUser.role !== "super-admin"
       ? []
       : await postgres.searchUsers({ q, category });
 
@@ -614,11 +765,19 @@ async function handleApi(req, res, pathname) {
   }
 
   if (req.method === "GET" && pathname === "/api/files") {
+    if (!requireRole(currentUser, ["super-admin", "pemonitor"])) {
+      sendJson(res, 403, { error: "Database file hanya untuk super admin atau pemonitor" });
+      return;
+    }
     sendJson(res, 200, { files: collectFileAudit(db) });
     return;
   }
 
   if (req.method === "GET" && pathname === "/api/admin/backup.zip") {
+    if (!requireRole(currentUser, ["super-admin"])) {
+      sendJson(res, 403, { error: "Backup hanya untuk super admin" });
+      return;
+    }
     const zip = buildBackupZip(db);
     const stamp = new Date().toISOString().slice(0, 10);
     res.writeHead(200, {
@@ -632,6 +791,10 @@ async function handleApi(req, res, pathname) {
   }
 
   if (req.method === "POST" && pathname === "/api/admin/reset-data") {
+    if (!requireRole(currentUser, ["super-admin"])) {
+      sendJson(res, 403, { error: "Reset data hanya untuk super admin" });
+      return;
+    }
     const body = await parseBody(req);
     if (body.confirm !== "RESET") {
       sendJson(res, 400, { error: "Konfirmasi reset tidak valid" });
@@ -654,21 +817,28 @@ async function handleApi(req, res, pathname) {
   }
 
   if (req.method === "POST" && pathname === "/api/users") {
+    if (!requireRole(currentUser, ["super-admin"])) {
+      sendJson(res, 403, { error: "Pembuatan user hanya untuk super admin" });
+      return;
+    }
     const body = await parseBody(req);
     if (!body.name || !body.nip || !body.password || !body.role) {
       sendJson(res, 400, { error: "name, nip, password, dan role wajib diisi" }); return;
+    }
+    if (String(body.password).length < 6) {
+      sendJson(res, 400, { error: "Password minimal 6 karakter" }); return;
     }
     if (db.users.find(u => u.nip === body.nip)) {
       sendJson(res, 409, { error: "NIP sudah digunakan" }); return;
     }
     const newUser = {
       id: makeId("usr"),
-      name: String(body.name).trim(),
-      nip: String(body.nip).trim(),
-      password: String(body.password),
+      name: cleanText(body.name, 120),
+      nip: cleanText(body.nip, 80),
+      password: hashPassword(body.password),
       role: body.role,
       avatar: String(body.name).trim().split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase(),
-      unit: String(body.unit || "").trim(),
+      unit: cleanText(body.unit || "", 160),
     };
     db.users.push(newUser);
     await writeDb(db);
@@ -681,22 +851,43 @@ async function handleApi(req, res, pathname) {
   if (userMatch) {
     const uid = userMatch[1];
     if (req.method === "DELETE") {
+      if (!requireRole(currentUser, ["super-admin"])) {
+        sendJson(res, 403, { error: "Hapus user hanya untuk super admin" });
+        return;
+      }
       const idx = db.users.findIndex(u => u.id === uid);
       if (idx === -1) { sendJson(res, 404, { error: "User tidak ditemukan" }); return; }
+      if (db.users[idx].role === "super-admin" && db.users.filter(u => u.role === "super-admin").length <= 1) {
+        sendJson(res, 400, { error: "Super admin terakhir tidak boleh dihapus" });
+        return;
+      }
       db.users.splice(idx, 1);
       await writeDb(db);
       sendJson(res, 200, { ok: true });
       return;
     }
     if (req.method === "PUT") {
+      if (!requireRole(currentUser, ["super-admin"])) {
+        sendJson(res, 403, { error: "Edit user hanya untuk super admin" });
+        return;
+      }
       const idx = db.users.findIndex(u => u.id === uid);
       if (idx === -1) { sendJson(res, 404, { error: "User tidak ditemukan" }); return; }
       const body = await parseBody(req);
       const u = db.users[idx];
-      if (body.name) { u.name = String(body.name).trim(); u.avatar = u.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
+      if (u.role === "super-admin" && body.role && body.role !== "super-admin" && db.users.filter(x => x.role === "super-admin").length <= 1) {
+        sendJson(res, 400, { error: "Role super admin terakhir tidak boleh diubah" });
+        return;
+      }
+      if (body.name) { u.name = cleanText(body.name, 120); u.avatar = u.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
       if (body.role) u.role = body.role;
-      if (body.unit) u.unit = String(body.unit).trim();
-      if (body.password) u.password = String(body.password);
+      if (body.unit) u.unit = cleanText(body.unit, 160);
+      if (body.password) {
+        if (String(body.password).length < 6) {
+          sendJson(res, 400, { error: "Password minimal 6 karakter" }); return;
+        }
+        u.password = hashPassword(body.password);
+      }
       db.users[idx] = u;
       await writeDb(db);
       const { password: _, ...safe } = u;
@@ -707,10 +898,7 @@ async function handleApi(req, res, pathname) {
 
   /* ── Letters ── */
   if (req.method === "GET" && pathname === "/api/letters") {
-    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-    const role = url.searchParams.get("role");
-    const userId = url.searchParams.get("userId");
-    sendJson(res, 200, { letters: filterLettersForRole(db.letters, role, userId) });
+    sendJson(res, 200, { letters: filterLettersForRole(db.letters, currentUser.role, currentUser.id) });
     return;
   }
 
@@ -718,6 +906,10 @@ async function handleApi(req, res, pathname) {
   if (req.method === "GET" && reviewAttachmentMatch) {
     const [, letterId, reviewId, attachmentId] = reviewAttachmentMatch;
     const targetLetter = db.letters.find(l => l.id === letterId);
+    if (!canAccessLetterServer(targetLetter, currentUser)) {
+      sendJson(res, 403, { error: "Anda tidak punya akses ke lampiran ini" });
+      return;
+    }
     const review = targetLetter && (targetLetter.reviewHistory || []).find(r => r.id === reviewId);
     const attachment = review && (review.attachments || []).find(a => a.id === attachmentId);
     if (!attachment || !attachment.storedName) {
@@ -733,6 +925,10 @@ async function handleApi(req, res, pathname) {
   if (req.method === "GET" && signerAttachmentMatch) {
     const [, letterId, revisionId, attachmentId] = signerAttachmentMatch;
     const targetLetter = db.letters.find(l => l.id === letterId);
+    if (!canAccessLetterServer(targetLetter, currentUser)) {
+      sendJson(res, 403, { error: "Anda tidak punya akses ke lampiran ini" });
+      return;
+    }
     const revision = targetLetter && (targetLetter.signerRevisions || []).find(r => r.id === revisionId);
     const attachment = revision && (revision.attachments || []).find(a => a.id === attachmentId);
     if (!attachment || !attachment.storedName) {
@@ -745,24 +941,28 @@ async function handleApi(req, res, pathname) {
   }
 
   if (req.method === "POST" && pathname === "/api/letters") {
-    const body = await parseBody(req);
-    if (!body.perihal || !body.pembuatId) {
-      sendJson(res, 400, { error: "perihal dan pembuatId wajib diisi" }); return;
+    if (!requireRole(currentUser, ["pembuat", "super-admin"])) {
+      sendJson(res, 403, { error: "Hanya pembuat atau super admin yang bisa membuat surat" });
+      return;
     }
-    const pembuat = db.users.find(u => u.id === body.pembuatId);
+    const body = await parseBody(req);
+    if (!body.perihal) {
+      sendJson(res, 400, { error: "perihal wajib diisi" }); return;
+    }
+    const pembuat = currentUser;
     const letter = {
       id: makeId("surat"),
-      nomor: String(body.nomor || "Menunggu nomor TU").trim(),
-      perihal: String(body.perihal).trim(),
-      kategori: String(body.kategori || "Surat Keputusan (SK)").trim(),
-      prioritas: String(body.prioritas || "Normal").trim(),
+      nomor: cleanText(body.nomor || "Menunggu nomor TU", 120),
+      perihal: cleanText(body.perihal, 240),
+      kategori: cleanText(body.kategori || "Surat Keputusan (SK)", 120),
+      prioritas: cleanText(body.prioritas || "Normal", 60),
       status: "Draft",
-      pembuatId: body.pembuatId,
+      pembuatId: currentUser.id,
       pembuatNama: pembuat ? pembuat.name : "Unknown",
       pembuatUnit: pembuat ? pembuat.unit : "",
       reviewerIds: Array.isArray(body.reviewerIds) ? body.reviewerIds : [],
       penandatanganId: body.penandatanganId || null,
-      ringkasan: String(body.ringkasan || "").trim(),
+      ringkasan: cleanText(body.ringkasan || "", 5000),
       dokumen: saveUploadedDataUrl(body.dokumen, "surat"),
       catatan: [],
       reviewHistory: [],
@@ -794,6 +994,10 @@ async function handleApi(req, res, pathname) {
   const [, lid, action] = letterMatch;
   const letter = db.letters.find(l => l.id === lid);
   if (!letter) { sendJson(res, 404, { error: "Surat tidak ditemukan" }); return; }
+  if (!canAccessLetterServer(letter, currentUser)) {
+    sendJson(res, 403, { error: "Anda tidak punya akses ke surat ini" });
+    return;
+  }
 
   // GET single letter
   if (req.method === "GET" && !action) {
@@ -834,12 +1038,16 @@ async function handleApi(req, res, pathname) {
 
   // PUT update letter
   if (req.method === "PUT" && !action) {
+    if (!(currentUser.role === "super-admin" || (currentUser.role === "pembuat" && letter.pembuatId === currentUser.id))) {
+      sendJson(res, 403, { error: "Anda tidak boleh mengedit surat ini" });
+      return;
+    }
     const body = await parseBody(req);
     const fields = ["nomor","perihal","kategori","prioritas","status","ringkasan","penandatanganId"];
-    fields.forEach(f => { if (body[f] !== undefined) letter[f] = typeof body[f] === "string" ? body[f].trim() : body[f]; });
+    fields.forEach(f => { if (body[f] !== undefined) letter[f] = typeof body[f] === "string" ? cleanText(body[f], f === "ringkasan" ? 5000 : 240) : body[f]; });
     if (body.dokumen && body.dokumen.dataUrl) {
       letter.dokumen = saveUploadedDataUrl(body.dokumen, "surat");
-      addHistory(letter, "Dokumen PDF diperbarui", body.updatedBy || "System");
+      addHistory(letter, "Dokumen PDF diperbarui", currentUser.name || "System");
     }
     if (Array.isArray(body.reviewerIds)) {
       letter.reviewerIds = body.reviewerIds;
@@ -851,7 +1059,7 @@ async function handleApi(req, res, pathname) {
       });
     }
     letter.updatedAt = nowIso();
-    addHistory(letter, "Surat diperbarui", body.updatedBy || "System");
+    addHistory(letter, "Surat diperbarui", currentUser.name || "System");
     await writeDb(db);
     sendJson(res, 200, { letter });
     return;
@@ -859,6 +1067,10 @@ async function handleApi(req, res, pathname) {
 
   // DELETE letter
   if (req.method === "DELETE" && !action) {
+    if (!(currentUser.role === "super-admin" || (currentUser.role === "pembuat" && letter.pembuatId === currentUser.id))) {
+      sendJson(res, 403, { error: "Anda tidak boleh menghapus surat ini" });
+      return;
+    }
     const idx = db.letters.findIndex(l => l.id === lid);
     db.letters.splice(idx, 1);
     await writeDb(db);
@@ -869,9 +1081,9 @@ async function handleApi(req, res, pathname) {
   // POST /api/letters/:id/comments
   if (req.method === "POST" && action === "comments") {
     const body = await parseBody(req);
-    const pesan = String(body.pesan || "").trim();
+    const pesan = cleanText(body.pesan || "", 3000);
     if (!pesan) { sendJson(res, 400, { error: "Pesan catatan tidak boleh kosong" }); return; }
-    const comment = { id: makeId("cat"), oleh: String(body.oleh || "User").trim(), peran: body.peran || "user", pesan, createdAt: nowIso() };
+    const comment = { id: makeId("cat"), oleh: currentUser.name, peran: currentUser.role, pesan, createdAt: nowIso() };
     letter.catatan.unshift(comment);
     letter.updatedAt = nowIso();
     addHistory(letter, `Catatan baru dari ${comment.oleh}`, comment.oleh);
@@ -882,14 +1094,19 @@ async function handleApi(req, res, pathname) {
 
   // POST /api/letters/:id/review
   if (req.method === "POST" && action === "review") {
+    if (currentUser.role !== "pereview") {
+      sendJson(res, 403, { error: "Review hanya bisa dilakukan pereview terkait" });
+      return;
+    }
     const body = await parseBody(req);
-    const { reviewerId, status, catatan } = body;
+    const { status, catatan } = body;
+    const reviewerId = currentUser.id;
     if (!reviewerId || !status) { sendJson(res, 400, { error: "reviewerId dan status wajib diisi" }); return; }
 
     const rv = letter.reviewHistory.find(r => r.reviewerId === reviewerId);
     if (!rv) { sendJson(res, 404, { error: "Reviewer tidak terdaftar untuk surat ini" }); return; }
     rv.status    = status === "Ditolak" ? "Ditolak" : status === "Direvisi" ? "Direvisi" : "Disetujui";
-    rv.catatan   = String(catatan || "").trim();
+    rv.catatan   = cleanText(catatan || "", 3000);
     rv.reviewedAt = nowIso();
     rv.attachments = saveReviewAttachments(body.attachments);
 
@@ -921,15 +1138,20 @@ async function handleApi(req, res, pathname) {
 
   // POST /api/letters/:id/signature
   if (req.method === "POST" && action === "signature") {
+    if (!(currentUser.role === "penandatangan" && letter.penandatanganId === currentUser.id)) {
+      sendJson(res, 403, { error: "Tanda tangan hanya untuk penandatangan terkait" });
+      return;
+    }
     const body = await parseBody(req);
-    const { userId, image, nama, jabatan } = body;
-    if (!nama) { sendJson(res, 400, { error: "Nama penandatangan wajib diisi" }); return; }
+    const { image, nama, jabatan } = body;
+    const cleanNama = cleanText(nama, 160);
+    if (!cleanNama) { sendJson(res, 400, { error: "Nama penandatangan wajib diisi" }); return; }
 
     letter.tandaTangan = {
       image: image || null,
-      nama: String(nama).trim(),
-      jabatan: String(jabatan || "").trim(),
-      userId: userId || null,
+      nama: cleanNama,
+      jabatan: cleanText(jabatan || "", 160),
+      userId: currentUser.id,
       signedAt: nowIso()
     };
     letter.status    = "Ditandatangani";
@@ -942,6 +1164,10 @@ async function handleApi(req, res, pathname) {
 
   // POST /api/letters/:id/submit  (submit for review)
   if (req.method === "POST" && action === "submit") {
+    if (!(currentUser.role === "super-admin" || (currentUser.role === "pembuat" && letter.pembuatId === currentUser.id))) {
+      sendJson(res, 403, { error: "Submit hanya boleh dilakukan pembuat surat" });
+      return;
+    }
     if (letter.reviewerIds.length === 0) { sendJson(res, 400, { error: "Tambahkan reviewer terlebih dahulu" }); return; }
     letter.status    = "Menunggu Review";
     (letter.reviewHistory || []).forEach(r => {
@@ -959,16 +1185,21 @@ async function handleApi(req, res, pathname) {
 
   // POST /api/letters/:id/request-revision (dari penandatangan)
   if (req.method === "POST" && action === "request-revision") {
+    if (!(currentUser.role === "penandatangan" && letter.penandatanganId === currentUser.id)) {
+      sendJson(res, 403, { error: "Revisi hanya bisa diminta penandatangan terkait" });
+      return;
+    }
     const body = await parseBody(req);
-    const { userId, catatan } = body;
-    if (!catatan) { sendJson(res, 400, { error: "Catatan revisi wajib diisi" }); return; }
+    const { catatan } = body;
+    const cleanCatatan = cleanText(catatan, 3000);
+    if (!cleanCatatan) { sendJson(res, 400, { error: "Catatan revisi wajib diisi" }); return; }
 
-    const signer = db.users.find(u => u.id === userId);
+    const signer = currentUser;
     const revision = {
       id: makeId("srv"),
-      signerId: userId || null,
+      signerId: currentUser.id,
       signerNama: signer ? signer.name : "Penandatangan",
-      catatan: String(catatan).trim(),
+      catatan: cleanCatatan,
       attachments: saveReviewAttachments(body.attachments),
       createdAt: nowIso()
     };
@@ -979,7 +1210,7 @@ async function handleApi(req, res, pathname) {
       id: makeId("cat"),
       oleh: revision.signerNama,
       peran: "penandatangan",
-      pesan: `Permintaan revisi dari penandatangan: ${catatan}`,
+      pesan: `Permintaan revisi dari penandatangan: ${cleanCatatan}`,
       createdAt: revision.createdAt
     });
     // Reset status reviewer agar harus approve ulang setelah revisi
@@ -990,7 +1221,7 @@ async function handleApi(req, res, pathname) {
       }
     });
     letter.updatedAt = nowIso();
-    addHistory(letter, `Revisi diminta penandatangan: ${catatan}`, revision.signerNama);
+    addHistory(letter, `Revisi diminta penandatangan: ${cleanCatatan}`, revision.signerNama);
     await writeDb(db);
     sendJson(res, 200, { letter });
     return;
@@ -1004,7 +1235,7 @@ function serveStatic(req, res, pathname) {
   const requested = pathname === "/" ? "/index.html" : pathname;
   const resolved  = path.resolve(PUBLIC_DIR, `.${requested}`);
 
-  if (!resolved.startsWith(PUBLIC_DIR)) {
+  if (resolved !== PUBLIC_DIR && !resolved.startsWith(PUBLIC_DIR + path.sep)) {
     res.writeHead(403); res.end("Forbidden"); return;
   }
 
@@ -1055,4 +1286,3 @@ function startServer(port = PORT) {
 if (require.main === module) startServer(PORT);
 
 module.exports = { createServer, startServer };
-

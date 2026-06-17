@@ -13,12 +13,16 @@ let searchTimer = null;
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => {
   const saved = sessionStorage.getItem('lf_user');
+  const token = sessionStorage.getItem('lf_token');
   const remoteSuper = sessionStorage.getItem('lf_remote_super_admin');
   if (remoteSuper) window._remoteSuperAdmin = JSON.parse(remoteSuper);
-  if (saved) {
+  if (saved && token) {
     window._currentUser = JSON.parse(saved);
     showApp();
   } else {
+    sessionStorage.removeItem('lf_user');
+    sessionStorage.removeItem('lf_remote_super_admin');
+    sessionStorage.removeItem('lf_remote_user_id');
     showPage('login');
   }
   bindGlobal();
@@ -428,6 +432,7 @@ async function startRemoteUser(id) {
   sessionStorage.setItem('lf_remote_super_admin', JSON.stringify(window._remoteSuperAdmin));
   window._currentUser = target;
   sessionStorage.setItem('lf_user', JSON.stringify(target));
+  sessionStorage.setItem('lf_remote_user_id', target.id);
   showToast(`Remote sebagai ${target.name}`, 'success');
   showApp();
 }
@@ -438,6 +443,7 @@ function exitRemoteMode() {
   window._remoteSuperAdmin = null;
   sessionStorage.setItem('lf_user', JSON.stringify(window._currentUser));
   sessionStorage.removeItem('lf_remote_super_admin');
+  sessionStorage.removeItem('lf_remote_user_id');
   showToast('Kembali ke super admin', 'success');
   showApp();
 }
@@ -607,11 +613,13 @@ async function doLogin() {
   if (!nip || !pass) { errEl.textContent='NIP dan password wajib diisi'; errEl.classList.remove('hidden'); return; }
   try {
     document.getElementById('loginBtn').textContent = 'Memuat...';
-    const { user } = await API.login(nip, pass);
+    const { user, token } = await API.login(nip, pass);
     window._currentUser = user;
     window._remoteSuperAdmin = null;
     sessionStorage.setItem('lf_user', JSON.stringify(user));
+    sessionStorage.setItem('lf_token', token);
     sessionStorage.removeItem('lf_remote_super_admin');
+    sessionStorage.removeItem('lf_remote_user_id');
     showPage('role');
   } catch(e) {
     errEl.textContent = e.message;
@@ -623,7 +631,9 @@ async function doLogin() {
 
 function doLogout() {
   sessionStorage.removeItem('lf_user');
+  sessionStorage.removeItem('lf_token');
   sessionStorage.removeItem('lf_remote_super_admin');
+  sessionStorage.removeItem('lf_remote_user_id');
   window._currentUser = null;
   window._remoteSuperAdmin = null;
   window._letters = [];
